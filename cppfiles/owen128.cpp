@@ -372,12 +372,9 @@ double* owenC(int nu, double t, double* delta, double* R, size_t J){
   const double a = sign(t)*sqrt(t*t/nu);
   const double b = nu/(nu+t*t);
   const double sb = sqrt(b);
-  double ab;
-  if(fabs(t)>DBL_MAX){
-    ab = 0;
-  }else{
-    ab = a*b;
-  }
+  const double ab = fabs(t) > DBL_MAX ?
+                      0 :
+                      sqrt(nu) * 1/(nu/t+t);
   double* C = new double[J];
   int i;
   for(i=0; i<J; i++){
@@ -490,7 +487,7 @@ double* powenC(int nu, double t1, double t2, double* delta1, double* delta2, siz
   const double a2 = sign(t2)*sqrt(t2*t2/nu);
   const double b2 = nu/(nu+t2*t2);
   const double sb2 = sqrt(b2);
-  const double ab2 = fabs(t2)>DBL_MAX ? 0 : a2*b2;
+  //const double ab2 = fabs(t2)>DBL_MAX ? 0 : a2*b2;
   double R[J];
   int j;
   for(j=0; j<J; j++){
@@ -498,22 +495,28 @@ double* powenC(int nu, double t1, double t2, double* delta1, double* delta2, siz
   }
   double* C = new double[J];
   for(j=0; j<J; j++){
-    double C1 =
-      owent(delta2[j]*sb2, a2) - owent(delta1[j]*sb1, a1);
-    double y2 = t1 == 0 ?
-             a1-delta1[j]/R[j] :
-             t1/sqrt(nu)*(1-(1-t2/t1)/(1-delta2[j]/delta1[j]));
-    double C2 =
-      owent(R[j], a2-delta2[j]/R[j]) -
-        owent(R[j], y2);
-        //owent(R[j], a1-delta1[j]/R[j]);
-    double y3 = t1 == 0 ?
-              a1 - R[j]/b1/delta1[j] : // NaN si delta1 infini mais bouffé par Owen
-              t1/sqrt(nu)*(1- (1-delta2[j]/delta1[j])/(1-t2/t1)) -
-                (1-delta2[j]/delta1[j])/sqrt(nu)*nu/t1/(1-t2/t1);
+    double C1 = owent(delta2[j]*sb2, a2) - owent(delta1[j]*sb1, a1);
+    double H21 = fabs(t1) < 1 ?
+                  (t1-(t1-t2)/(1-delta2[j]/delta1[j]))/sqrt(nu) :
+                  t1/sqrt(nu)*(1-(1-t2/t1)/(1-delta2[j]/delta1[j]));
+    double H22 = fabs(t2) < 1 ?
+                  (t2-(t1-t2)/(delta1[j]/delta2[j]-1))/sqrt(nu) :
+                  t2/sqrt(nu)*(1-(t1/t2-1)/(delta1[j]/delta2[j]-1));
+    double C2 = owent(R[j], H22) - owent(R[j], H21);
+        //owent(R[j], a2-delta2[j]/R[j) - owent(R[j], a1-delta1[j]/R[j]);
+    double H32 = fabs(t2) < 1 ?
+                t2/sqrt(nu)*(1- (delta1[j]/delta2[j]-1)/(t1/t2-1)) -
+                  (delta1[j]/delta2[j]-1)/sqrt(nu)*nu/(t1-t2) :
+                t2/sqrt(nu)*(1- (delta1[j]/delta2[j]-1)/(t1/t2-1)) -
+                  (delta1[j]/delta2[j]-1)/sqrt(nu)*nu/t2/(t1/t2-1);
+    double H31 = fabs(t1) < 1 ?
+                t1/sqrt(nu)*(1- (1-delta2[j]/delta1[j])/(1-t2/t1)) -
+                  (1-delta2[j]/delta1[j])/sqrt(nu)*nu/(t1-t2) :
+                t1/sqrt(nu)*(1- (1-delta2[j]/delta1[j])/(1-t2/t1)) -
+                  (1-delta2[j]/delta1[j])/sqrt(nu)*nu/t1/(1-t2/t1);
     double C3 =
-      owent(delta2[j]*sb2, (delta2[j]*ab2-R[j])/b2/delta2[j]) -
-          owent(delta1[j]*sb1, y3);
+      owent(delta2[j]*sb2, H32) - //(delta2[j]*ab2-R[j])/b2/delta2[j]) -
+          owent(delta1[j]*sb1, H31);
     C[j] = 2*(C1 - C2 - C3) + (delta1[j] >= 0) - (delta2[j] >= 0);
   }
   return C;
@@ -529,32 +532,38 @@ double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, siz
   const mp::float128 sb1 = mp::sqrt(b1);
   mp::float128 ab1, asb1;
   if(fabs(t1) > DBL_MAX){ // est-ce utile ?..
-    ab1 = mp::float128(0); // mieux de retourner 0 et NaN si delta1 infini
+    ab1 = mp::float128(0);
     asb1 = mp::float128(sign(t1));
   }else{
-    ab1 = mp::float128(sqrt(nu)) * 1/(nu/t1 + t1);
+    ab1 = mp::float128(sqrt(nu) * 1/(nu/t1+t1));
     asb1 = sign(t1) * mp::sqrt(1/(nu/t1t1+1));
   }
   const mp::float128 t2t2(t2*t2);
   const mp::float128 a2 = sign(t2)*mp::sqrt(t2t2/nu);
   const mp::float128 b2 = nu/(nu+t2t2);
   const mp::float128 sb2 = mp::sqrt(b2);
-  const mp::float128 ab2 = a2*b2; // à gérer aussi au cas où t2 très petit (négatif)
-  const mp::float128 asb2 = sign(t2) * mp::sqrt(t2t2/(nu+t2t2));
+  const mp::float128 ab2 = fabs(t2) > DBL_MAX ?
+                             mp::float128(0) :
+                             mp::float128(sqrt(nu) * 1/(nu/t2+t2));
+  const mp::float128 asb2 = fabs(t2) > DBL_MAX ?
+                              mp::float128(sign(t2)) :
+                              sign(t2) * mp::sqrt(1/(nu/t2t2+1));
   mp::float128 R[J];
   mp::float128 dnormdsb1[J];
   mp::float128 dnormdsb2[J];
   mp::float128 Roversb1[J];
+  mp::float128 Roversb2[J];
   mp::float128 dabminusRoversb1[J];
   mp::float128 dabminusRoversb2[J];
   mp::float128 dnormR[J];
+  mp::float128 RdnormR[J];
   const int n = nu-1;
   mp::float128 M1[n][J];
   mp::float128 M2[n][J];
   mp::float128 H[n][J];
   int j;
   for(j=0; j<J; j++){
-    R[j] = mp::float128(sqrt(nu)*(delta1[j] - delta2[j])/(t1-t2));
+    R[j] = mp::float128(sqrt(nu)*(delta1[j]-delta2[j])/(t1-t2));
     dnormdsb1[j] = dnorm128(delta1[j] * sb1);
     dnormdsb2[j] = dnorm128(delta2[j] * sb2);
     //dabminusRoversb1[j] = (delta1[j]*ab1 - R[j])/sb1;
@@ -563,10 +572,17 @@ double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, siz
     // non pb t1=0 !
     // ? faire a1*R[j] = asb1 * (R[j]/sb1) ? looks good
     // et y'a le signe de t1... non  c'est bon
-    Roversb1[j] = t1<1 ? R[j] : sign(t1)*(delta1[j] - delta2[j])*sqrt(nu/t1t1+1)/(1-t2/t1);
+    Roversb1[j] = fabs(t1) < 1 ?
+                    R[j]/sb1 :
+                    sign(t1)*(delta1[j]-delta2[j])*sqrt(nu/t1t1+1)/(1-t2/t1);
     dabminusRoversb1[j] = delta1[j]*asb1 - Roversb1[j];
-    dabminusRoversb2[j] = (delta2[j]*ab2 - R[j])/sb2;
+    Roversb2[j] = fabs(t2) < 1 ?
+                    R[j]/sb2 :
+                    sign(t2)*(delta1[j]-delta2[j])*sqrt(nu/t2t2+1)/(t1/t2-1);
+    dabminusRoversb2[j] = delta2[j]*asb2 - Roversb2[j];
+    //dabminusRoversb2[j] = (delta2[j]*ab2 - R[j])/sb2;
     dnormR[j] = dnorm128(R[j]);
+    RdnormR[j] = R[j] * dnormR[j];
     H[0][j] = -dnormR[j] *
                 (pnorm128(a2*R[j]-delta2[j]) - // pnorm128(a1*R[j]-delta1[j]));
                   pnorm128(asb1*Roversb1[j]-delta1[j]));
@@ -592,9 +608,9 @@ double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, siz
       A[0] = 1;
       A[1] = 1;
       for(j=0; j<J; j++){
-        L1[0][j] = ab1 * R[j] * dnormR[j] * // dnorm128(a1*R[j]-delta1[j])/2;
+        L1[0][j] = ab1 * RdnormR[j] * // dnorm128(a1*R[j]-delta1[j])/2;
                      dnorm128(asb1*Roversb1[j]-delta1[j])/2;
-        L2[0][j] = ab2 * R[j] * dnormR[j] * dnorm128(a2*R[j]-delta2[j])/2;
+        L2[0][j] = ab2 * RdnormR[j] * dnorm128(a2*R[j]-delta2[j])/2;
       }
       int k;
       for(k=2; k<n; k++){
