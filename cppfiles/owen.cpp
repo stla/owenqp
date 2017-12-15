@@ -2,6 +2,10 @@
 #include <boost/math/special_functions/erf.hpp>
 #include <cmath>
 #include <vector>
+#include <stdexcept>
+
+extern "C"
+{
 
 namespace mp = boost::multiprecision;
 namespace m = boost::math;
@@ -18,9 +22,12 @@ double dnorm(double x){
 }
 
 double pnorm(double q){
-  if(fabs(q) > DBL_MAX){ // inutile (à confirmer mais je suis sûr)
-    return q > 0 ? 1 : 0;
+  if(std::isnan(q)){
+    return nan("");
   }
+  // if(fabs(q) > DBL_MAX){ // inutile (à confirmer mais je suis sûr)
+  //   return q > 0 ? 1 : 0;
+  // }
   return m::erfc(-q * one_div_root_two)/2.0;
 }
 
@@ -300,9 +307,23 @@ double* studentC(double q, int nu, double* delta, size_t J){
   return C;
 }
 
-double* studentCDF(double q, int nu, double* delta, size_t J){
+double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
+  if(nu < 1){
+    throw std::invalid_argument( "`nu` must be >= 1" ); // plante ghci
+  }
+  if(isinf(nu)){
+    for(int j=0; j<J; j++){
+      out[j] = pnorm(q - delta[j]);
+    }
+    return out;
+  }
   if(nu==1){
-    return studentC(q, nu, delta, J);
+    double* C = studentC(q, nu, delta, J);
+    for(int j=0; j<J; j++){
+      out[j] = C[j];
+    }
+    delete[] C;
+    return out;
   }
   const mp::float128 qq(q*q);
   const mp::float128 a = sign(q)*mp::sqrt(qq/nu);
@@ -346,7 +367,6 @@ double* studentCDF(double q, int nu, double* delta, size_t J){
         sum[j] += M[i][j];
       }
     }
-    double* out = new double[J];
     for(j=0; j<J; j++){
       out[j] = C[j] + 2*sum[j].convert_to<double>();
     }
@@ -360,7 +380,6 @@ double* studentCDF(double q, int nu, double* delta, size_t J){
       sum[j] += M[i][j];
     }
   }
-  double* out = new double[J];
   for(j=0; j<J; j++){
     out[j] = pnorm(-delta[j]) + (root_two_pi128*sum[j]).convert_to<double>();
   }
@@ -652,4 +671,6 @@ double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, siz
     delete[] C;
     return out;
   }
+}
+
 }

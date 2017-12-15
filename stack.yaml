@@ -3,6 +3,11 @@ resolver: nightly-2017-12-13
 packages:
 - '.'
 
+extra-deps:
+- gamma-0.9.0.2
+- continued-fractions-0.9.1.1
+- converge-0.1.0.1
+
 extra-include-dirs:
 - U:\Data\C\boost_1_65_1\boost_1_65_1
 - .\cppfiles

@@ -1,6 +1,5 @@
 EXPORTS
  HsStart
- owenQexport
- powenExport
+ studentExport
  owenTexport
  lockFile

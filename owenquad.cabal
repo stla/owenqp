@@ -22,19 +22,30 @@ flag dll
     Build the DLL.
   default: False
 
+flag exe
+  description:
+    Build the executable.
+  default: False
+
 library
   hs-source-dirs:      src
-  exposed-modules:     Owen
+  exposed-modules:     Student
+                     , Student.StudentCPP
+                     , OwenT
   build-depends:       base >= 4.7 && < 5
-                     , inline-c-cpp
-                     , inline-c
                      , vector
+                     , gamma
   default-language:    Haskell2010
   extra-libraries:     stdc++
                      , quadmath
+  include-dirs:        cppfiles
+  C-sources:           cppfiles/owen.cpp
 
 executable testowen128
-  buildable: False
+  if flag(exe)
+    buildable: True
+  else
+    buildable: False
   hs-source-dirs:      src-exec
   main-is:             Main.hs
   default-language:    Haskell2010
@@ -54,6 +65,7 @@ foreign-library owen128
   other-modules:       OwenExport
   build-depends:       base >=4.7 && <5
                      , owenquad
+                     , vector
   hs-source-dirs:      src-dll
   c-sources:           StartEnd.c
   extra-libraries:     stdc++
