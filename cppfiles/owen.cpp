@@ -1,6 +1,7 @@
 #include <boost/multiprecision/float128.hpp>
 #include <boost/math/special_functions/erf.hpp>
 #include <boost/math/constants/constants.hpp>
+#include <boost/math/special_functions/gamma.hpp>
 #include <cmath>
 #include <vector>
 #include <stdexcept>
@@ -304,7 +305,7 @@ double owent(double h, double a){
 //****************************************************************************//
 
 // ------ Student CDF ------------------------------------------------------- //
-double* studentC(double q, int nu, double* delta, size_t J){
+double* studentCDF_C(double q, int nu, double* delta, size_t J){
   const double a = sign(q)*sqrt(q*q/nu);
   const double sb = sqrt(nu/(nu+q*q));
   double* C = new double[J];
@@ -336,7 +337,7 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
     return out;
   }
   if(nu==1){
-    double* C = studentC(q, nu, delta, J);
+    double* C = studentCDF_C(q, nu, delta, J);
     for(int j=0; j<J; j++){
       out[j] = C[j];
     }
@@ -377,7 +378,7 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
     }
   }
   if(nu%2==1){
-    double* C = studentC(q, nu, delta, J);
+    double* C = studentCDF_C(q, nu, delta, J);
     std::vector<mp::float128> sum(J);
     int i;
     for(i=1; i<nu-1; i+=2){
@@ -405,7 +406,7 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
 }
 
 // ------- Owen Q-function -------------------------------------------------- //
-double* owenC(int nu, double t, double* delta, double* R, size_t J){
+double* OwenQ1_C(int nu, double t, double* delta, double* R, size_t J){
   const double a = sign(t)*sqrt(t*t/nu);
   const double b = nu/(nu+t*t);
   const double sb = sqrt(b);
@@ -424,8 +425,20 @@ double* owenC(int nu, double t, double* delta, double* R, size_t J){
 }
 
 double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out){
+  if(t > DBL_MAX){
+    for(int j=0; j<J; j++){
+      out[j] = m::gamma_q(0.5*nu, 0.5*R[j]*R[j]);
+    }
+  return out;
+  }
+  if(t < DBL_MIN || isinf(nu)){
+    for(int j=0; j<J; j++){
+      out[j] = 0.0;
+    }
+  return out;
+  }
   if(nu == 1){
-    double* C = owenC(nu, t, delta, R, J);
+    double* C = OwenQ1_C(nu, t, delta, R, J);
     for(int j=0; j<J; j++){
       out[j] = C[j];
     }
@@ -510,7 +523,7 @@ double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out
         sum[j] += M[i][j]+H[i][j];
       }
     }
-    double* C = owenC(nu, t, delta, R, J);
+    double* C = OwenQ1_C(nu, t, delta, R, J);
     for(j=0; j<J; j++){
       out[j] = C[j] + 2*sum[j].convert_to<double>();
     }
@@ -520,7 +533,7 @@ double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out
 }
 
 // --- Owen cumulative function --------------------------------------------- //
-double* powenC(int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
+double* OwenCDF4_C(int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
   const double a1 = sign(t1)*sqrt(t1*t1/nu);
   const double b1 = nu/(nu+t1*t1);
   const double sb1 = sqrt(b1);
@@ -561,9 +574,14 @@ double* powenC(int nu, double t1, double t2, double* delta1, double* delta2, siz
   return C;
 }
 
-double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
+double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, size_t J, double* out){
   if(nu == 1){
-    return powenC(nu, t1, t2, delta1, delta2, J);
+    double* C = OwenCDF4_C(nu, t1, t2, delta1, delta2, J);
+    for(int j=0; j<J; j++){
+      out[j] = C[j];
+    }
+    delete[] C;
+    return out;
   }
   const mp::float128 t1t1(t1*t1);
   const mp::float128 a1 = sign(t1)*mp::sqrt(t1t1/nu);
@@ -666,7 +684,6 @@ double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, siz
       }
     }
   }
-  double* out = new double[J];
   std::vector<mp::float128> sum(J);
   int i;
   if(nu % 2 == 0){
@@ -686,7 +703,7 @@ double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, siz
         sum[j] += M2[i][j] - M1[i][j] + H[i][j];
       }
     }
-    double* C = powenC(nu, t1, t2, delta1, delta2, J);
+    double* C = OwenCDF4_C(nu, t1, t2, delta1, delta2, J);
     for(j=0; j<J; j++){
       out[j] = C[j] + 2*sum[j].convert_to<double>();
     }
