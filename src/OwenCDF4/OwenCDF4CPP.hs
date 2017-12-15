@@ -18,4 +18,4 @@ owenCDF4cpp nu t1 t2 delta1 delta2 = do
       \v1 -> V.unsafeWith delta2vec $
          \v2 -> withForeignPtr fptr $ c_OwenCDF4 nu t1 t2 v1 v2 (fromIntegral n)
     return $ V.unsafeFromForeignPtr0 fptr n
-  where n = length delta
+  where n = length delta1

@@ -5,4 +5,4 @@ import           Foreign.C.Types
 import           OwenCDF4.OwenCDF4CPP
 
 owenCDF4 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
-owenCDF4 nu t1 t2 delta1 delta2 = do xx
+owenCDF4 nu t1 t2 delta1 delta2 = owenCDF4cpp nu t1 t2 delta1 delta2  

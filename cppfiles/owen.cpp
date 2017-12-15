@@ -659,7 +659,7 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
       A[1] = 1;
       for(j=0; j<J; j++){
         L1[0][j] = ab1 * RdnormR[j] * 0.5*dnorm128(asb1*Roversb1[j]-delta1[j]);
-        L2[0][j] = ab2 * RdnormR[j] * 0.5*dnorm128(asb1*Roversb2[j]-delta2[j]);
+        L2[0][j] = ab2 * RdnormR[j] * 0.5*dnorm128(asb2*Roversb2[j]-delta2[j]);
       }
       int k;
       for(k=2; k<n; k++){

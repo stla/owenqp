@@ -1,5 +1,7 @@
 EXPORTS
  HsStart
- studentExport
+ studentCDFexport
  owenTexport
+ owenQ1export
+ owenCDF4export
  lockFile

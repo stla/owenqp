@@ -22,11 +22,11 @@ owenQ1 nu t delta r = do
         False -> do
           case finiteIndices == [] of
             True -> return $ V.fromList
-              (map (\(delta, r) ->
-                      if delta>0 then 0 else gammaQhalf nu r)
+              (map (\(delta, r) -> if delta>0 then 0 else gammaQhalf nu r)
                    (zip delta r))
             False -> do
-              owen <- owenQ1cpp nu t [delta !! i | i <- finiteIndices] [r !! i | i <- finiteIndices]
+              owen <- owenQ1cpp nu t [delta !! i | i <- finiteIndices]
+                                     [r !! i | i <- finiteIndices]
               out <- VM.replicate n (0 :: CDouble)
               let step i j
                    | i == n = do

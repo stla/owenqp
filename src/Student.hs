@@ -8,15 +8,15 @@ import           Student.StudentCPP
 pnorm :: CDouble -> CDouble
 pnorm x = realToFrac $ normcdf (realToFrac x :: Double)
 
-f :: CDouble -> CDouble -> CDouble
-f q delta =
-  if isInfinite delta
-    then
-      if signum q == signum delta
-        then 0/0
-        else if q>0 then 1 else 0
-    else
-      if q>0 then 1 else 0
+-- f :: CDouble -> CDouble -> CDouble
+-- f q delta =
+--   if isInfinite delta
+--     then
+--       if signum q == signum delta
+--         then 0/0
+--         else if q>0 then 1 else 0
+--     else
+--       if q>0 then 1 else 0
 
 -- TODO: check nu integer >=1, ou dans le code C ?
 studentCDF :: CDouble -> CInt -> [CDouble] -> IO (V.Vector CDouble)
