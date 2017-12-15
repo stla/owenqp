@@ -1,0 +1,65 @@
+name:                owenquad
+version:             0.1.0.0
+synopsis:            Owen T-function and Owen Q-function
+description:
+    Evaluation of the Owen T-function and the Owen Q-function.
+    .
+    Also evaluates the cumulative distribution function of the noncentral Student
+    distribution with an integer number of degrees of freedom.
+homepage:            https://github.com/stla/owenquad#readme
+license:             GPL-3
+license-file:        LICENSE
+author:              Stéphane Laurent
+maintainer:          laurent_step@yahoo.fr
+copyright:           2017 Stéphane Laurent
+category:            Distributions
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+flag dll
+  description:
+    Build the DLL.
+  default: False
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Owen
+  build-depends:       base >= 4.7 && < 5
+                     , inline-c-cpp
+                     , inline-c
+                     , vector
+  default-language:    Haskell2010
+  extra-libraries:     stdc++
+                     , quadmath
+
+executable testowen128
+  buildable: False
+  hs-source-dirs:      src-exec
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , owenquad
+
+foreign-library owen128
+  if flag(dll)
+    buildable: True
+  else
+    buildable: False
+  type:                native-shared
+  lib-version-info:    0:1:0
+  if os(Windows)
+    options:      standalone
+    mod-def-file: exports.def
+  other-modules:       OwenExport
+  build-depends:       base >=4.7 && <5
+                     , owenquad
+  hs-source-dirs:      src-dll
+  c-sources:           StartEnd.c
+  extra-libraries:     stdc++
+  default-language:    Haskell2010
+-- ghc -lstdc++ -shared StartEnd.c -o Owen128.dll exports.def
+
+source-repository head
+  type:     git
+  location: https://github.com/stla/owenquad
