@@ -1,5 +1,6 @@
 #include <boost/multiprecision/float128.hpp>
 #include <boost/math/special_functions/erf.hpp>
+#include <boost/math/constants/constants.hpp>
 #include <cmath>
 #include <vector>
 #include <stdexcept>
@@ -10,12 +11,19 @@ extern "C"
 namespace mp = boost::multiprecision;
 namespace m = boost::math;
 
-const double one_div_root_two_pi = 3.989422804014326779399460599343818684e-01;
-const double one_div_root_two = 7.071067811865475244008443621048490392e-01;
-const double root_two_pi = 2.506628274631000502415765284811045253;
-const double one_div_two_pi = 0.159154943091895335768883763372514362;
-const mp::float128 root_two_pi128(root_two_pi);
-const mp::float128 one_div_root_two128(one_div_root_two);
+// const double one_div_root_two_pi = 3.989422804014326779399460599343818684e-01;
+// const double one_div_root_two = 7.071067811865475244008443621048490392e-01;
+// const double root_two_pi = 2.506628274631000502415765284811045253;
+// const double one_div_two_pi = 0.159154943091895335768883763372514362;
+// const mp::float128 root_two_pi128(root_two_pi);
+// const mp::float128 one_div_root_two128(one_div_root_two);
+const double one_div_root_two_pi = m::constants::one_div_root_two_pi<double>();
+const double one_div_root_two = m::constants::one_div_root_two<double>();
+const double root_two_pi = m::constants::root_two_pi<double>();
+const double one_div_two_pi = m::constants::one_div_two_pi<double>();
+const mp::float128 root_two_pi128 = m::constants::root_two_pi<mp::float128>();
+const mp::float128 one_div_root_two_pi128 = m::constants::one_div_root_two_pi<mp::float128>();
+const mp::float128 one_div_root_two128 = m::constants::one_div_root_two<mp::float128>();
 
 double dnorm(double x){
   return exp(-x*x/2) * one_div_root_two_pi;
@@ -32,7 +40,7 @@ double pnorm(double q){
 }
 
 mp::float128 dnorm128(mp::float128 x){
-  return mp::exp(-x*x/2)/root_two_pi128;
+  return mp::exp(-x*x/2) * one_div_root_two_pi128;
 }
 
 mp::float128 pnorm128(mp::float128 q){
@@ -302,18 +310,28 @@ double* studentC(double q, int nu, double* delta, size_t J){
   double* C = new double[J];
   int j;
   for(j=0; j<J; j++){
-    C[j] = owent(delta[j] * sb, a) + pnorm(-delta[j]*sb); //+
+    C[j] = 2*owent(delta[j] * sb, a) + pnorm(-delta[j]*sb); //+
   }
   return C;
 }
 
 double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
   if(nu < 1){
-    throw std::invalid_argument( "`nu` must be >= 1" ); // plante ghci
+    throw std::invalid_argument( "`nu` must be >= 1" ); // plante ghci, DLL, exe
   }
   if(isinf(nu)){
     for(int j=0; j<J; j++){
       out[j] = pnorm(q - delta[j]);
+    }
+    return out;
+  }
+  if(isinf(q)){
+    for(int j=0; j<J; j++){
+      out[j] = isinf(delta[j]) ?
+                  (signbit(q) == signbit(delta[j]) ?
+                    nan("") :
+                    (signbit(q) ? 0 : 1)) :
+                  (signbit(q) ? 0 : 1);
     }
     return out;
   }
@@ -340,7 +358,7 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
   }
   if(nu>2){
     for(j=0; j<J; j++){
-      M[1][j] = b * (delta[j] * a * M[0][j] + a * dnorm128(delta[j]) / root_two_pi128);
+      M[1][j] = b * (delta[j] * a * M[0][j] + a * dnorm128(delta[j]) * one_div_root_two_pi128);
     }
     if(nu>3){
       std::vector<mp::float128> A(nu-3);

@@ -4,5 +4,5 @@ import Student
 
 main :: IO()
 main = do
-  x <- studentCDF 0 0 [0]
+  x <- studentCDF 0 5 [0, 1]
   print x
