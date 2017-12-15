@@ -423,9 +423,14 @@ double* owenC(int nu, double t, double* delta, double* R, size_t J){
   return C;
 }
 
-double* owenQ1(int nu, double t, double* delta, double* R, size_t J){
+double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out){
   if(nu == 1){
-    return owenC(nu, t, delta, R, J);
+    double* C = owenC(nu, t, delta, R, J);
+    for(int j=0; j<J; j++){
+      out[j] = C[j];
+    }
+    delete[] C;
+    return out;
   }
   const mp::float128 tt(t*t);
   const mp::float128 a = sign(t)*mp::sqrt(tt/nu);
@@ -487,7 +492,6 @@ double* owenQ1(int nu, double t, double* delta, double* R, size_t J){
       }
     }
   }
-  double* out = new double[J];
   std::vector<mp::float128> sum(J);
   int i;
   if(nu % 2 == 0){
