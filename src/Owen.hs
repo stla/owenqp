@@ -29,24 +29,24 @@ studentCDF q nu delta = do
     } |]
   peekArray (length delta) ptr
 
-owenQ128 :: CInt -> CDouble -> [CDouble] -> [CDouble] -> IO [CDouble]
-owenQ128 nu t delta r = do
+owenQ1 :: CInt -> CDouble -> [CDouble] -> [CDouble] -> IO [CDouble]
+owenQ1 nu t delta r = do
   mdelta <- V.thaw (V.fromList delta)
   mr <- V.thaw (V.fromList r)
   ptr <- [CPP.exp| double* {
-      owenQ128($(int nu), $(double t),
+      owenQ1($(int nu), $(double t),
               $vec-ptr:(double* mdelta), $vec-ptr:(double* mr), $vec-len:mdelta)
     } |]
   VM.clear mdelta
   VM.clear mr
   peekArray (length delta) ptr
 
-powen :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] -> IO [CDouble]
-powen nu t1 t2 delta1 delta2 = do
+powen4 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] -> IO [CDouble]
+powen4 nu t1 t2 delta1 delta2 = do
   mdelta1 <- V.thaw (V.fromList delta1)
   mdelta2 <- V.thaw (V.fromList delta2)
   ptr <- [CPP.exp| double* {
-      powen128($(int nu), $(double t1), $(double t2),
+      powen4($(int nu), $(double t1), $(double t2),
        $vec-ptr:(double* mdelta1), $vec-ptr:(double* mdelta2), $vec-len:mdelta1)
     } |]
   VM.clear mdelta1

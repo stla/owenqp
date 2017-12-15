@@ -42,10 +42,16 @@ int sign(double x){
 //********* Owen T-function **************************************************//
 //****** http://people.sc.fsu.edu/~jburkardt/cpp_src/owens/owens.html ********//
 double znorm1(double x){
+  if(std::isnan(x)){
+    return nan("");
+  }
   return 0.5 * m::erf ( x * one_div_root_two );
 }
 
 double znorm2(double x){
+  if(std::isnan(x)){
+    return nan("");
+  }
   return 0.5 * m::erfc ( x * one_div_root_two );
 }
 
@@ -105,7 +111,6 @@ double tfun ( double h, double a, double ah ){
       break;
     }
   }
-
   iaint = 8;
   for ( i = 1; i <= 7; i++ )
   {
@@ -115,7 +120,6 @@ double tfun ( double h, double a, double ah ){
       break;
     }
   }
-
   icode = select[ihint-1+(iaint-1)*15];
   m = ord[icode-1];
 
@@ -255,10 +259,7 @@ double owent(double h, double a){
   }
 
   double cut = 0.67;
-  double normah;
-  double normh;
-  double value;
-
+  double normah, normh, value;
   double ah = absa * absh;
 
   if ( absa <= 1.0 )
@@ -388,7 +389,7 @@ double* owenC(int nu, double t, double* delta, double* R, size_t J){
   return C;
 }
 
-double* owenQ128(int nu, double t, double* delta, double* R, size_t J){
+double* owenQ1(int nu, double t, double* delta, double* R, size_t J){
   if(nu == 1){
     return owenC(nu, t, delta, R, J);
   }
@@ -485,7 +486,7 @@ double* powenC(int nu, double t1, double t2, double* delta1, double* delta2, siz
   const double a1 = sign(t1)*sqrt(t1*t1/nu);
   const double b1 = nu/(nu+t1*t1);
   const double sb1 = sqrt(b1);
-  const double ab1 = fabs(t1)>DBL_MAX ? 0 : a1*b1;
+  //const double ab1 = fabs(t1)>DBL_MAX ? 0 : sqrt(nu) * 1/(nu/t1 + t1);
   const double a2 = sign(t2)*sqrt(t2*t2/nu);
   const double b2 = nu/(nu+t2*t2);
   const double sb2 = sqrt(b2);
@@ -499,18 +500,26 @@ double* powenC(int nu, double t1, double t2, double* delta1, double* delta2, siz
   for(j=0; j<J; j++){
     double C1 =
       owent(delta2[j]*sb2, a2) - owent(delta1[j]*sb1, a1);
+    double y2 = t1 == 0 ?
+             a1-delta1[j]/R[j] :
+             t1/sqrt(nu)*(1-(1-t2/t1)/(1-delta2[j]/delta1[j]));
     double C2 =
-      owent(R[j], (a2*R[j]-delta2[j])/R[j]) -
-        owent(R[j], (a1*R[j]-delta1[j])/R[j]);
+      owent(R[j], a2-delta2[j]/R[j]) -
+        owent(R[j], y2);
+        //owent(R[j], a1-delta1[j]/R[j]);
+    double y3 = t1 == 0 ?
+              a1 - R[j]/b1/delta1[j] : // NaN si delta1 infini mais bouffé par Owen
+              t1/sqrt(nu)*(1- (1-delta2[j]/delta1[j])/(1-t2/t1)) -
+                (1-delta2[j]/delta1[j])/sqrt(nu)*nu/t1/(1-t2/t1);
     double C3 =
       owent(delta2[j]*sb2, (delta2[j]*ab2-R[j])/b2/delta2[j]) -
-        owent(delta1[j]*sb1, (delta1[j]*ab1-R[j])/b1/delta1[j]);
+          owent(delta1[j]*sb1, y3);
     C[j] = 2*(C1 - C2 - C3) + (delta1[j] >= 0) - (delta2[j] >= 0);
   }
   return C;
 }
 
-double* powen128(int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
+double* powen4(int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
   if(nu == 1){
     return powenC(nu, t1, t2, delta1, delta2, J);
   }
@@ -523,7 +532,7 @@ double* powen128(int nu, double t1, double t2, double* delta1, double* delta2, s
     ab1 = mp::float128(0); // mieux de retourner 0 et NaN si delta1 infini
     asb1 = mp::float128(sign(t1));
   }else{
-    ab1 = sign(t1) * mp::float128(sqrt(nu)) * 1/(nu/t1 + t1); // sign s'en va ? non c'est bon
+    ab1 = mp::float128(sqrt(nu)) * 1/(nu/t1 + t1);
     asb1 = sign(t1) * mp::sqrt(1/(nu/t1t1+1));
   }
   const mp::float128 t2t2(t2*t2);
@@ -554,8 +563,7 @@ double* powen128(int nu, double t1, double t2, double* delta1, double* delta2, s
     // non pb t1=0 !
     // ? faire a1*R[j] = asb1 * (R[j]/sb1) ? looks good
     // et y'a le signe de t1... non  c'est bon
-    Roversb1[j] = t1==0 ? R[j] : sign(t1)*(delta1[j] - delta2[j])*sqrt(nu/t1t1+1)/(1-t2/t1);
-      // NaN si plante si t1 proche de 0 !! => mettre un epsilon
+    Roversb1[j] = t1<1 ? R[j] : sign(t1)*(delta1[j] - delta2[j])*sqrt(nu/t1t1+1)/(1-t2/t1);
     dabminusRoversb1[j] = delta1[j]*asb1 - Roversb1[j];
     dabminusRoversb2[j] = (delta2[j]*ab2 - R[j])/sb2;
     dnormR[j] = dnorm128(R[j]);
@@ -569,9 +577,11 @@ double* powen128(int nu, double t1, double t2, double* delta1, double* delta2, s
   }
   if(nu >= 3){
     for(j=0; j<J; j++){
-      H[1][j] = R[j] * H[0][j];
-      M1[1][j] = delta1[j]*ab1*M1[0][j] + ab1 * dnormdsb1[j] *
-                   (dnorm128(delta1[j]*asb1) - dnorm128(dabminusRoversb1[j]));
+      H[1][j] = R[j] > DBL_MAX ? 0 : R[j] * H[0][j]; // pas besoin car je vais traiter delta1=Inf
+      M1[1][j] = delta1[j] > DBL_MAX ? // idem, pas besoin
+                   0 :
+                   delta1[j]*ab1*M1[0][j] + ab1 * dnormdsb1[j] *
+                     (dnorm128(delta1[j]*asb1) - dnorm128(dabminusRoversb1[j]));
       M2[1][j] = delta2[j]*ab2*M2[0][j] + ab2 * dnormdsb2[j] *
                    (dnorm128(delta2[j]*asb2) - dnorm128(dabminusRoversb2[j]));
     }
