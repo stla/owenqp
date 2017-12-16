@@ -11,9 +11,12 @@ foreign import ccall unsafe "studentCDF" c_studentCDF :: CDouble -> CInt ->
 
 studentCDFcpp :: CDouble -> CInt -> [CDouble] -> IO (V.Vector CDouble)
 studentCDFcpp q nu delta = do
-    let deltavec = V.fromList delta
-    fptr <- mallocForeignPtrArray n
-    V.unsafeWith deltavec $
-      \v -> withForeignPtr fptr $ c_studentCDF q nu v (fromIntegral n)
-    return $ V.unsafeFromForeignPtr0 fptr n
+    case delta == [] of
+      True -> return V.empty
+      False -> do
+        let deltavec = V.fromList delta
+        fptr <- mallocForeignPtrArray n
+        V.unsafeWith deltavec $
+          \v -> withForeignPtr fptr $ c_studentCDF q nu v (fromIntegral n)
+        return $ V.unsafeFromForeignPtr0 fptr n
   where n = length delta

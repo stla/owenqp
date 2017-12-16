@@ -11,11 +11,14 @@ foreign import ccall unsafe "OwenQ1" c_OwenQ1 :: CInt -> CDouble ->
 
 owenQ1cpp :: CInt -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
 owenQ1cpp nu t delta r = do
-    let deltavec = V.fromList delta
-    let rvec = V.fromList r
-    fptr <- mallocForeignPtrArray n
-    V.unsafeWith deltavec $
-      \v1 -> V.unsafeWith rvec $
-         \v2 -> withForeignPtr fptr $ c_OwenQ1 nu t v1 v2 (fromIntegral n)
-    return $ V.unsafeFromForeignPtr0 fptr n
+    case delta == [] of
+      True -> return V.empty
+      False -> do
+        let deltavec = V.fromList delta
+        let rvec = V.fromList r
+        fptr <- mallocForeignPtrArray n
+        V.unsafeWith deltavec $
+          \v1 -> V.unsafeWith rvec $
+             \v2 -> withForeignPtr fptr $ c_OwenQ1 nu t v1 v2 (fromIntegral n)
+        return $ V.unsafeFromForeignPtr0 fptr n
   where n = length delta

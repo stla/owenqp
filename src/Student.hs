@@ -1,12 +1,9 @@
 module Student
   where
-import           Data.Number.Erf      (normcdf)
 import qualified Data.Vector.Storable as V
+import           Internal.NormCDF
 import           Foreign.C.Types
 import           Student.StudentCPP
-
-pnorm :: CDouble -> CDouble
-pnorm x = realToFrac $ normcdf (realToFrac x :: Double)
 
 -- f :: CDouble -> CDouble -> CDouble
 -- f q delta =
@@ -21,9 +18,9 @@ pnorm x = realToFrac $ normcdf (realToFrac x :: Double)
 -- TODO: check nu integer >=1, ou dans le code C ?
 studentCDF :: CDouble -> CInt -> [CDouble] -> IO (V.Vector CDouble)
 studentCDF q nu delta = do
-  case nu >= (maxBound :: CInt) of
-    True  -> return $ V.fromList (map (\x -> pnorm(q-x)) delta)
-    False -> studentCDFcpp q nu delta
-      -- case isInfinite q of
-      --   True -> return $ V.fromList $ map (f q) delta
-      --   False -> studentCDF q nu delta
+    case nu >= (maxBound :: CInt) of
+      True  -> return $ V.fromList (map (\x -> pnorm(q-x)) delta)
+      False -> studentCDFcpp q nu delta
+    -- case isInfinite q of
+    --   True -> return $ V.fromList $ map (f q) delta
+    --   False -> studentCDF q nu delta
