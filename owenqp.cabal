@@ -37,6 +37,7 @@ library
                      , OwenCDF4
                      , OwenCDF4.OwenCDF4CPP
                      , Internal.NormCDF
+                     , Internal.Infinite
   build-depends:       base >= 4.7 && < 5
                      , vector
                      , gamma

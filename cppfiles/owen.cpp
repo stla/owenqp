@@ -423,18 +423,24 @@ double* OwenQ1_C(int nu, double t, double* delta, double* R, size_t J){
 }
 
 double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out){
-  if(t > DBL_MAX){
+  if(nu < 1){
     for(int j=0; j<J; j++){
-      out[j] = m::gamma_p(0.5*nu, 0.5*R[j]*R[j]);
+      out[j] = nan("");
     }
-  return out;
+    return out;
   }
-  if(t < DBL_MIN || nu > INT_MAX){
-    for(int j=0; j<J; j++){
-      out[j] = 0.0;
-    }
-  return out;
-  }
+  // if(t > DBL_MAX){
+  //   for(int j=0; j<J; j++){
+  //     out[j] = m::gamma_p(0.5*nu, 0.5*R[j]*R[j]);
+  //   }
+  // return out;
+  // }
+  // if(t < DBL_MIN || nu > INT_MAX){
+  //   for(int j=0; j<J; j++){
+  //     out[j] = 0.0;
+  //   }
+  // return out;
+  // }
   if(nu == 1){
     double* C = OwenQ1_C(nu, t, delta, R, J);
     for(int j=0; j<J; j++){
@@ -573,82 +579,88 @@ double* OwenCDF4_C(int nu, double t1, double t2, double* delta1, double* delta2,
 }
 
 double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, size_t J, double* out){
-  if(t1 <= t2){
-    double* S1 = new double[J];
-    S1 = studentCDF(t1, nu, delta1, J, S1);
-    double* S2 = new double[J];
-    S2 = studentCDF(t2, nu, delta2, J, S2);
+  if(nu < 1){
     for(int j=0; j<J; j++){
-      out[j] = S2[j] - S1[j];
-    }
-    delete[] S1;
-    delete[] S2;
-    return out;
-  }
-  if(t1 > DBL_MAX){
-    for(int j=0; j<J; j++){
-      out[j] = delta1[j] > DBL_MAX ? nan("") : 0;
+      out[j] = nan("");
     }
     return out;
   }
-  // if(t1 < DBL_MIN){ // cela implique t1 <= t2 => inutile
-  //   int K=0;
-  //   int j;
-  //   for(j=0; j<J; j++){
-  //     if(delta1[j] < DBL_MIN){
-  //       out[j] = nan("");
-  //     }else{
-  //       K += 1;
-  //     }
-  //   }
-  //   if(K > 0){
-  //     int k=0;
-  //     double* d2 = new double[K];
-  //     int* indices = new int[K];
-  //     for(j=0; j<J; j++){
-  //       if(delta1[j] >= DBL_MIN){
-  //         d2[k] = delta2[k];
-  //         indices[k] = j;
-  //         k += 1;
-  //       }
-  //     }
-  //     double* S2 = studentCDF(t2, nu, d2, K, d2);
-  //     for(k=0; k<K; k++){
-  //       out[indices[k]] = S2[k];
-  //     }
-  //     delete[] d2;
-  //     delete[] indices;
-  //     delete[] S2;
-  //   }
-  // return out;
-  // }
-  // if(t2 > DBL_MAX){ // cela implique t1 <= t2 => inutile
+  // if(t1 <= t2){
+  //   double* S1 = new double[J];
+  //   S1 = studentCDF(t1, nu, delta1, J, S1);
+  //   double* S2 = new double[J];
+  //   S2 = studentCDF(t2, nu, delta2, J, S2);
   //   for(int j=0; j<J; j++){
-  //     if(delta2[j] > DBL_MAX){
-  //       out[j] =  nan("");
-  //     }else{
-  //       double* d = new double[1];
-  //       d[0] = delta1[j];
-  //       double* S1 = studentCDF(t1, nu, d, 1, d);
-  //       out[j] = 1-S1[0];
-  //       delete[] d;
-  //       delete[] S1;
-  //     }
+  //     out[j] = S2[j] - S1[j];
   //   }
-  // return out;
+  //   delete[] S1;
+  //   delete[] S2;
+  //   return out;
   // }
-  if(t2 < DBL_MIN){
-    for(int j=0; j<J; j++){
-      out[j] = delta2[j] < DBL_MIN ? nan("") : 0;
-    }
-    return out;
-  }
-  if(nu > INT_MAX){ // peut-être mieux dans Haskell si maxBound pas pareil
-    for(int j=0; j<J; j++){
-      out[j] = fmax(0, pnorm(t2-delta2[j]) - pnorm(t1-delta1[j]));
-    }
-    return out;
-  }
+  // if(t1 > DBL_MAX){
+  //   for(int j=0; j<J; j++){
+  //     out[j] = delta1[j] > DBL_MAX ? nan("") : 0;
+  //   }
+  //   return out;
+  // }
+  // // if(t1 < DBL_MIN){ // cela implique t1 <= t2 => inutile
+  // //   int K=0;
+  // //   int j;
+  // //   for(j=0; j<J; j++){
+  // //     if(delta1[j] < DBL_MIN){
+  // //       out[j] = nan("");
+  // //     }else{
+  // //       K += 1;
+  // //     }
+  // //   }
+  // //   if(K > 0){
+  // //     int k=0;
+  // //     double* d2 = new double[K];
+  // //     int* indices = new int[K];
+  // //     for(j=0; j<J; j++){
+  // //       if(delta1[j] >= DBL_MIN){
+  // //         d2[k] = delta2[k];
+  // //         indices[k] = j;
+  // //         k += 1;
+  // //       }
+  // //     }
+  // //     double* S2 = studentCDF(t2, nu, d2, K, d2);
+  // //     for(k=0; k<K; k++){
+  // //       out[indices[k]] = S2[k];
+  // //     }
+  // //     delete[] d2;
+  // //     delete[] indices;
+  // //     delete[] S2;
+  // //   }
+  // // return out;
+  // // }
+  // // if(t2 > DBL_MAX){ // cela implique t1 <= t2 => inutile
+  // //   for(int j=0; j<J; j++){
+  // //     if(delta2[j] > DBL_MAX){
+  // //       out[j] =  nan("");
+  // //     }else{
+  // //       double* d = new double[1];
+  // //       d[0] = delta1[j];
+  // //       double* S1 = studentCDF(t1, nu, d, 1, d);
+  // //       out[j] = 1-S1[0];
+  // //       delete[] d;
+  // //       delete[] S1;
+  // //     }
+  // //   }
+  // // return out;
+  // // }
+  // if(t2 < DBL_MIN){
+  //   for(int j=0; j<J; j++){
+  //     out[j] = delta2[j] < DBL_MIN ? nan("") : 0;
+  //   }
+  //   return out;
+  // }
+  // if(nu > INT_MAX){ // peut-être mieux dans Haskell si maxBound pas pareil
+  //   for(int j=0; j<J; j++){
+  //     out[j] = fmax(0, pnorm(t2-delta2[j]) - pnorm(t1-delta1[j]));
+  //   }
+  //   return out;
+  // }
   if(nu == 1){
     double* C = OwenCDF4_C(nu, t1, t2, delta1, delta2, J);
     for(int j=0; j<J; j++){
