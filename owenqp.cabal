@@ -1,4 +1,4 @@
-name:                owenquad
+name:                owenqp
 version:             0.1.0.0
 synopsis:            Owen T-function and Owen Q-function
 description:
@@ -6,7 +6,7 @@ description:
     .
     Also evaluates the cumulative distribution function of the noncentral Student
     distribution with an integer number of degrees of freedom.
-homepage:            https://github.com/stla/owenquad#readme
+homepage:            https://github.com/stla/owenqp#readme
 license:             GPL-3
 license-file:        LICENSE
 author:              Stéphane Laurent
@@ -55,7 +55,7 @@ executable testowen128
   main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
-                     , owenquad
+                     , owenqp
 
 foreign-library owen128
   if flag(dll)
@@ -69,7 +69,7 @@ foreign-library owen128
     mod-def-file: exports.def
   other-modules:       OwenExport
   build-depends:       base >=4.7 && <5
-                     , owenquad
+                     , owenqp
                      , vector
   hs-source-dirs:      src-dll
   c-sources:           StartEnd.c
@@ -79,4 +79,4 @@ foreign-library owen128
 
 source-repository head
   type:     git
-  location: https://github.com/stla/owenquad
+  location: https://github.com/stla/owenqp

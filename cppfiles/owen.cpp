@@ -5,7 +5,6 @@
 #include <cmath>
 #include <vector>
 #include <climits>
-#include <stdexcept>
 
 extern "C"
 {
@@ -27,9 +26,6 @@ const mp::float128 root_two_pi128 = m::constants::root_two_pi<mp::float128>();
 const mp::float128 one_div_root_two_pi128 = m::constants::one_div_root_two_pi<mp::float128>();
 const mp::float128 one_div_root_two128 = m::constants::one_div_root_two<mp::float128>();
 
-double dnorm(double x){
-  return exp(-x*x/2) * one_div_root_two_pi;
-}
 
 double pnorm(double q){
   if(std::isnan(q)){
@@ -319,7 +315,10 @@ double* studentCDF_C(double q, int nu, double* delta, size_t J){
 
 double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
   if(nu < 1){
-    throw std::invalid_argument( "`nu` must be >= 1" ); // plante ghci, DLL, exe
+    for(int j=0; j<J; j++){
+      out[j] = nan("");
+    }
+    return out;
   }
   if(nu > INT_MAX){
     for(int j=0; j<J; j++){
