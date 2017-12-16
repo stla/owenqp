@@ -4,6 +4,7 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <cmath>
 #include <vector>
+#include <climits>
 #include <stdexcept>
 
 extern "C"
@@ -320,15 +321,15 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
   if(nu < 1){
     throw std::invalid_argument( "`nu` must be >= 1" ); // plante ghci, DLL, exe
   }
-  if(isinf(nu)){
+  if(nu > INT_MAX){
     for(int j=0; j<J; j++){
       out[j] = pnorm(q - delta[j]);
     }
     return out;
   }
-  if(isinf(q)){
+  if(fabs(q) > DBL_MAX){
     for(int j=0; j<J; j++){
-      out[j] = isinf(delta[j]) ?
+      out[j] = fabs(delta[j]) > DBL_MAX ?
                   (signbit(q) == signbit(delta[j]) ?
                     nan("") :
                     (signbit(q) ? 0 : 1)) :
@@ -427,11 +428,11 @@ double* OwenQ1_C(int nu, double t, double* delta, double* R, size_t J){
 double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out){
   if(t > DBL_MAX){
     for(int j=0; j<J; j++){
-      out[j] = m::gamma_q(0.5*nu, 0.5*R[j]*R[j]);
+      out[j] = m::gamma_p(0.5*nu, 0.5*R[j]*R[j]);
     }
   return out;
   }
-  if(t < DBL_MIN || isinf(nu)){
+  if(t < DBL_MIN || nu > INT_MAX){
     for(int j=0; j<J; j++){
       out[j] = 0.0;
     }
@@ -584,7 +585,7 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
     return out;
   }
   const mp::float128 t1t1(t1*t1);
-  const mp::float128 a1 = sign(t1)*mp::sqrt(t1t1/nu);
+//  const mp::float128 a1 = sign(t1)*mp::sqrt(t1t1/nu);
   const mp::float128 b1 = nu/(nu+t1t1);
   const mp::float128 sb1 = mp::sqrt(b1);
   mp::float128 ab1, asb1;
@@ -596,7 +597,7 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
     asb1 = sign(t1) * mp::sqrt(1/(nu/t1t1+1));
   }
   const mp::float128 t2t2(t2*t2);
-  const mp::float128 a2 = sign(t2)*mp::sqrt(t2t2/nu);
+//  const mp::float128 a2 = sign(t2)*mp::sqrt(t2t2/nu);
   const mp::float128 b2 = nu/(nu+t2t2);
   const mp::float128 sb2 = mp::sqrt(b2);
   const mp::float128 ab2 = fabs(t2) > DBL_MAX ?
