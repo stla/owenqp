@@ -73,7 +73,7 @@ owenCDF4 nu t1 t2 delta1 delta2 = do
             True -> return $ V.fromList $
               map (\x -> if isMinusInfinite x then 0/0 else 0) delta2
             False -> do
-              case nu >= (maxBound :: CInt) of
+              case nu >= (maxBound :: CInt) of -- entier > maxBound ne peut pas arriver!
                 True -> return $ V.fromList $
                           map (\(d1,d2) -> max 0 (pnorm(t2-d2)-pnorm(t1-d1)))
                               (zip delta1 delta2)

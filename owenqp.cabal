@@ -38,6 +38,8 @@ library
                      , OwenCDF4.OwenCDF4CPP
                      , Internal.NormCDF
                      , Internal.Infinite
+                     , OwenCDF2
+                     , OwenCDF2.OwenCDF2CPP
   build-depends:       base >= 4.7 && < 5
                      , vector
                      , gamma
@@ -76,8 +78,9 @@ foreign-library owen128
   hs-source-dirs:      src-dll
   c-sources:           StartEnd.c
   extra-libraries:     stdc++
+  ghc-options:         -optl-static
   default-language:    Haskell2010
--- ghc -lstdc++ -shared StartEnd.c -o Owen128.dll exports.def
+-- ghc -shared -lstdc++  -optl-static StartEnd.c -o Owen128.dll exports.def
 test-suite owenqp-test
   type:                 exitcode-stdio-1.0
   main-is:              Main.hs
