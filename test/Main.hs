@@ -48,16 +48,16 @@ main = defaultMain $
     [
       testCase "OwenCDF4 value 1" $ do
         x <- owenCDF4' 6 2 1 3 2
-        (@~?) x 0.01785518085912236 6,
+        (@~?) x 0.01785518085912236 9,
       testCase "OwenCDF4' value 1" $ do
         x <- owenCDF4_ 6 2 1 3 2
-        (@~?) x 0.01785518085912236 6,
+        (@~?) x 0.01785518085912236 9,
       testCase "OwenCDF4 value 2" $ do
         x <- owenCDF4' 5 2 1 3 2
-        (@~?) x 0.01868982415809893 6,
+        (@~?) x 0.01868982415809893 8,
       testCase "OwenCDF4' value 2" $ do
         x <- owenCDF4_ 5 2 1 3 2
-        (@~?) x 0.01868982415809893 6,
+        (@~?) x 0.01868982415809893 8,
       testCase "OwenCDF4 delta1=Inf - independent of t1" $ do
         x1 <- owenCDF4' 2 3 1 100 2
         x2 <- owenCDF4' 2 13 1 (1/0) 2
