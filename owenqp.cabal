@@ -36,10 +36,12 @@ library
                      , OwenQ1.OwenQ1CPP
                      , OwenCDF4
                      , OwenCDF4.OwenCDF4CPP
+                     , OwenCDF4.Internal
                      , Internal.NormCDF
                      , Internal.Infinite
                      , OwenCDF2
                      , OwenCDF2.OwenCDF2CPP
+                     , OwenCDF2.Internal
   build-depends:       base >= 4.7 && < 5
                      , vector
                      , gamma
