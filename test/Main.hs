@@ -2,6 +2,7 @@ module Main (main)
   where
 import           OwenCDF4
 import           OwenQ1
+import OwenQ2
 import           OwenT
 import OwenCDF2
 import           Student
@@ -21,6 +22,11 @@ studentCDF' q nu delta = do
 owenQ1' :: CInt -> CDouble -> CDouble -> CDouble -> IO CDouble
 owenQ1' nu t delta r = do
   value <- owenQ1 nu t [delta] [r]
+  return $ value V.! 0
+
+owenQ2' :: CInt -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenQ2' nu t delta r = do
+  value <- owenQ2 nu t [delta] [r]
   return $ value V.! 0
 
 owenCDF4' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
@@ -73,6 +79,19 @@ main = defaultMain $
         x1 <- owenQ1' 4 3 2 100
         x2 <- studentCDF' 3 4 2
         (@~?) x1 x2 11
+    ],
+    testGroup "OwenQ2"
+    [
+      testCase "OwenQ1 + OwenQ2 = studentCDF - test1" $ do
+        o1 <- owenQ1' 6 2 2 1
+        o2 <- owenQ2' 6 2 2 1
+        s <- studentCDF' 2 4 2
+        (@~?) (o1+o2) s 14,
+      testCase "OwenQ1 + OwenQ2 = studentCDF - test2" $ do
+        o1 <- owenQ1' 7 2 2 1
+        o2 <- owenQ2' 7 2 2 1
+        s <- studentCDF' 2 7 2
+        (@~?) (o1+o2) s 14
     ],
     testGroup "OwenCDF2"
     [

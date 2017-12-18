@@ -474,7 +474,8 @@ double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out
     dabminusRoversb[j] = (delta[j]*ab - R[j])/sb;
     dnormR[j] = dnorm128(R[j]);
     H[0][j] = -dnormR[j] * pnorm128(a*R[j]-delta[j]);
-    M[0][j] = asb * dnormdsb[j] * (pnorm128(delta[j]*asb) - pnorm128(dabminusRoversb[j]));
+    M[0][j] = asb * dnormdsb[j] *
+                (pnorm128(delta[j]*asb) - pnorm128(dabminusRoversb[j]));
   }
   if(nu >= 3){
     for(j=0; j<J; j++){
@@ -528,6 +529,113 @@ double* OwenQ1(int nu, double t, double* delta, double* R, size_t J, double* out
       }
     }
     double* C = OwenQ1_C(nu, t, delta, R, J);
+    for(j=0; j<J; j++){
+      out[j] = C[j] + 2*sum[j].convert_to<double>();
+    }
+    delete[] C;
+    return out;
+  }
+}
+
+// --- Owen second Q-function ------------------------------------------- //
+double* OwenQ2_C(int nu, double t, double* delta, double* R, size_t J){
+  const double a = sign(t)*sqrt(t*t/nu);
+  const double b = nu/(nu+t*t);
+  const double ab = sqrt(nu) * 1/(nu/t+t);
+  const double sb = sqrt(nu/(nu+t*t));
+  size_t j;
+  double* C = new double[J];
+  for(j=0; j<J; j++){
+    double C2 = owent(R[j], a-delta[j]/R[j]);
+    double C3 = owent(delta[j]*sb, (ab-R[j]/delta[j])/b);
+    C[j] = 2*(C2 + C3) + (delta[j] >= 0) +
+            pnorm(-delta[j]*sb) - pnorm(R[j]);
+  }
+  return C;
+}
+
+double* OwenQ2(int nu, double t, double* delta, double* R, size_t J, double* out){
+  size_t j;
+  if(nu == 1){
+    double* C = OwenQ2_C(nu, t, delta, R, J);
+    for(j=0; j<J; j++){
+      out[j] = C[j];
+    }
+    delete[] C;
+    return out;
+  }
+  const mp::float128 tt(t*t);
+  const mp::float128 a = sign(t)*mp::sqrt(tt/nu);
+  const mp::float128 b = nu/(nu+tt);
+  const mp::float128 sb = mp::sqrt(b);
+  const mp::float128 ab = mp::float128(sqrt(nu) * 1/(nu/t+t));
+  const mp::float128 asb = sign(t)*mp::sqrt(1/(nu/tt+1));
+  mp::float128 dnormdsb[J];
+  mp::float128 dabminusRoversb[J];
+  mp::float128 dnormR[J];
+  const size_t n = nu-1;
+  mp::float128 H[n][J];
+  mp::float128 M[n][J];
+  for(j=0; j<J; j++){
+    dnormdsb[j] = dnorm128(delta[j] * sb);
+    dabminusRoversb[j] = (delta[j]*ab - R[j])/sb;
+    dnormR[j] = dnorm128(R[j]);
+    H[0][j] = -dnormR[j] * pnorm128(a*R[j]-delta[j]);
+    M[0][j] = asb * dnormdsb[j] * pnorm128(dabminusRoversb[j]);
+  }
+  if(nu >= 3){
+    for(j=0; j<J; j++){
+      H[1][j] = R[j] * H[0][j];
+      M[1][j] = delta[j]*ab*M[0][j] + ab * dnormdsb[j] *
+                  dnorm128(dabminusRoversb[j]);
+    }
+    if(nu >= 4){
+      mp::float128 A[n];
+      mp::float128 L[n-2][J];
+      A[0] = 1;
+      A[1] = 1;
+      for(j=0; j<J; j++){
+        L[0][j] = ab * R[j] * dnormR[j] * dnorm128(a*R[j]-delta[j])/2;
+      }
+      size_t k;
+      for(k=2; k<n; k++){
+        A[k] = 1.0/k/A[k-1];
+      }
+      if(nu >= 5){
+        for(k=1; k<n-2; k++){
+          for(j=0; j<J; j++){
+            L[k][j] = A[k+2] * R[j] * L[k-1][j];
+          }
+        }
+      }
+      for(k=2; k<n; k++){
+        for(j=0; j<J; j++){
+          H[k][j] = A[k] * R[j] * H[k-1][j];
+          M[k][j] = (k-1.0)/k *
+                 (A[k-2] * delta[j] * ab * M[k-1][j] + b*M[k-2][j]) + L[k-2][j];
+        }
+      }
+    }
+  }
+  std::vector<mp::float128> sum(J);
+  size_t i;
+  if(nu % 2 == 0){
+    for(i=0; i<n; i+=2){
+      for(j=0; j<J; j++){
+        sum[j] += M[i][j] - H[i][j];
+      }
+    }
+    for(j=0; j<J; j++){
+      out[j] = root_two_pi*sum[j].convert_to<double>();
+    }
+    return out;
+  }else{
+    for(i=1; i<n; i+=2){
+      for(j=0; j<J; j++){
+        sum[j] += M[i][j] - H[i][j];
+      }
+    }
+    double* C = OwenQ2_C(nu, t, delta, R, J);
     for(j=0; j<J; j++){
       out[j] = C[j] + 2*sum[j].convert_to<double>();
     }
