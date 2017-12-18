@@ -10,8 +10,8 @@ import           OwenT
 import           Student
 
 
-foreign export ccall studentCDFexport :: Ptr CDouble -> Ptr CInt -> Ptr CDouble ->
-                                                Ptr CInt -> Ptr CDouble -> IO ()
+foreign export ccall studentCDFexport :: Ptr CDouble -> Ptr CInt ->
+                                 Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
 studentCDFexport :: Ptr CDouble -> Ptr CInt -> Ptr CDouble ->
                                                 Ptr CInt -> Ptr CDouble -> IO ()
 studentCDFexport q nu delta n result = do

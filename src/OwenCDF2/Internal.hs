@@ -81,8 +81,7 @@ _owenCDF2 nu t1 t2 delta1 delta2 = do
                           out0 <- studentCDF t1 nu [delta1 !! i | i <- finite]
                           out <- VM.replicate n (0/0 :: a)
                           let step i j
-                               | i == n = do
-                                    V.freeze out
+                               | i == n = V.freeze out
                                | otherwise = do
                                     case isInfinite (delta2 !! i)  of
                                       True -> step (i+1) j

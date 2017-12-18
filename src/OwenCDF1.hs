@@ -34,7 +34,8 @@ owenCDF1 nu t1 t2 delta1 delta2 = do
                     False -> do
                       out0 <- _owenCDF1 nu t1 t2 [delta1 !! i | i <- lower]
                                                  [delta2 !! i | i <- lower]
-                      out1 <- studentCDF (min t1 t2) nu [delta1 !! i | i <- equal]
+                      out1 <- studentCDF (min t1 t2) nu
+                                         [delta1 !! i | i <- equal]
                       out2 <- _owenCDF1 nu t2 t1 [delta2 !! i | i <- higher]
                                                  [delta1 !! i | i <- higher]
                       out <- VM.replicate n (0 :: a)

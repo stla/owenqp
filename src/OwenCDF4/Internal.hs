@@ -34,8 +34,7 @@ __owenCDF4 nu t1 t2 delta1 delta2 = do
                 [delta1 !! i | i <- ninfinite2, i `notElem` pinfinite1]
       out <- VM.replicate n (0 :: a)
       let step i j0 j1 j2
-           | i == n = do
-                V.freeze out
+           | i == n = V.freeze out
            | otherwise = do
                 let delta1_i = delta1 !! i
                 case isInfinite delta1_i of
@@ -49,11 +48,11 @@ __owenCDF4 nu t1 t2 delta1 delta2 = do
                     let delta2_i = delta2 !! i
                     case isInfinite delta2_i of
                       True -> do
-                        case delta2_i < 0 of
-                          True -> do
-                            VM.write out i (1 - (out2 V.! j2))
-                            step (i+1) j0 j1 (j2+1)
-                          False -> step (i+1) j0 j1 j2
+                        -- case delta2_i < 0 of -- inutile car delta2 < delta1
+                        --   True -> do
+                          VM.write out i (1 - (out2 V.! j2))
+                          step (i+1) j0 j1 (j2+1)
+                          -- False -> step (i+1) j0 j1 j2
                       False -> do
                         VM.write out i (out0 V.! j0)
                         step (i+1) (j0+1) j1 j2
@@ -83,10 +82,10 @@ _owenCDF4 nu t1 t2 delta1 delta2 = do
             False -> do
               case isInfinite t2 of -- t2 = -oo
                 True -> return $ V.fromList $
-                  map (\x -> if isMinusInfinite x then 0/0 else 0) delta2
+                         map (\x -> if isMinusInfinite x then 0/0 else 0) delta2
                 False -> do
                   case nu == (maxBound :: b) of -- mettre dans owenCDF4 ?
                     True -> return $ V.fromList $
-                              map (\(d1,d2) -> max 0 (pnorm(t2-d2)-pnorm(t1-d1)))
-                                  (zip delta1 delta2)
+                             map (\(d1,d2) -> max 0 (pnorm(t2-d2)-pnorm(t1-d1)))
+                                 (zip delta1 delta2)
                     False -> __owenCDF4 nu t1 t2 delta1 delta2

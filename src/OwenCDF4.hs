@@ -40,8 +40,7 @@ owenCDF4 nu t1 t2 delta1 delta2 = do
                                                  [delta1 !! i | i <- lower]
                       out <- VM.replicate n (0 :: a)
                       let step i j0 j1 j2
-                           | i == n = do
-                                V.freeze out
+                           | i == n = V.freeze out
                            | otherwise = do
                                 case (delta1 !! i) < (delta2 !! i) of
                                   True -> do

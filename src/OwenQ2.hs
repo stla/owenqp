@@ -31,8 +31,7 @@ _owenQ2 nu t delta r = do
                                    [r !! i | i <- finiteIndices]
             out <- VM.replicate n (0 :: a)
             let step i j
-                 | i == n = do
-                      V.freeze out
+                 | i == n = V.freeze out
                  | otherwise = do
                       let delta_i = delta !! i
                       case isFinite delta_i of
