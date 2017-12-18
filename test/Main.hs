@@ -1,20 +1,21 @@
 module Main (main)
   where
+import qualified Data.Vector.Storable             as V
+import           Foreign.C.Types
+import           OwenCDF1
+import           OwenCDF2
+import           OwenCDF3
 import           OwenCDF4
 import           OwenQ1
-import OwenQ2
+import           OwenQ2
 import           OwenT
-import OwenCDF2
-import OwenCDF1
-import OwenCDF3
+import           Statistics.Distribution
+import           Statistics.Distribution.StudentT
 import           Student
 import           Test.Tasty                       (defaultMain, testGroup)
 import           Test.Tasty.HUnit                 (testCase)
-import           Test.Tasty.HUnit                 (Assertion, (@=?), assertEqual)
-import Statistics.Distribution
-import qualified Data.Vector.Storable             as V
-import           Foreign.C.Types
-import           Statistics.Distribution.StudentT
+import           Test.Tasty.HUnit                 (Assertion, assertEqual,
+                                                   (@=?))
 
 studentCDF' :: CDouble -> CInt -> CDouble -> IO CDouble
 studentCDF' q nu delta = do
@@ -131,6 +132,21 @@ main = defaultMain $
       testCase "OwenCDF3 - value 2" $ do
         x <- owenCDF3' 5 2 1 3 2
         (@~?) x 0.806507459306199 8
+    ],
+    testGroup "OwenCDF"
+    [
+      testCase "The OwenCDF sum to one - test 1" $ do
+        x1 <- owenCDF1' 6 2 1 2 1
+        x2 <- owenCDF2' 6 2 1 2 1
+        x3 <- owenCDF3' 6 2 1 2 1
+        x4 <- owenCDF4' 6 2 1 2 1
+        (@~?) (x1+x2+x3+x4) 1 15,
+      testCase "The OwenCDF sum to one - test 2" $ do
+        x1 <- owenCDF1' 5 2 1 2 1
+        x2 <- owenCDF2' 5 2 1 2 1
+        x3 <- owenCDF3' 5 2 1 2 1
+        x4 <- owenCDF4' 5 2 1 2 1
+        (@~?) (x1+x2+x3+x4) 1 15
     ]
   ]
 

@@ -342,6 +342,7 @@ double* studentCDF(double q, size_t nu, double* delta, size_t J, double* out){
   const mp::float128 b = nu/(nu+qq);
   const mp::float128 sb = mp::sqrt(b);
   mp::float128 M[nu-1][J];
+  mp::float128 dsb;
   for(j=0; j<J ; j++){
     dsb = delta[j] * sb;
     M[0][j] = a * sb * dnorm128(dsb) * pnorm128(a*dsb);
