@@ -6,6 +6,7 @@ import OwenQ2
 import           OwenT
 import OwenCDF2
 import OwenCDF1
+import OwenCDF3
 import           Student
 import           Test.Tasty                       (defaultMain, testGroup)
 import           Test.Tasty.HUnit                 (testCase)
@@ -50,6 +51,11 @@ owenCDF1' nu t1 t2 delta1 delta2 = do
 owenCDF2' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
 owenCDF2' nu t1 t2 delta1 delta2 = do
   value <- owenCDF2 nu t1 t2 [delta1] [delta2]
+  return $ value V.! 0
+
+owenCDF3' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenCDF3' nu t1 t2 delta1 delta2 = do
+  value <- owenCDF3 nu t1 t2 [delta1] [delta2]
   return $ value V.! 0
 
 main :: IO ()
@@ -116,8 +122,16 @@ main = defaultMain $
       testCase "OwenCDF1 - value 2" $ do
         x <- owenCDF1' 5 2 1 3 2
         (@~?) x 0.1394458271284726 7
+    ],
+    testGroup "OwenCDF3"
+    [
+      testCase "OwenCDF3 - value 1" $ do
+        x <- owenCDF3' 6 2 1 3 2
+        (@~?) x 0.809137482066635 8,
+      testCase "OwenCDF3 - value 2" $ do
+        x <- owenCDF3' 5 2 1 3 2
+        (@~?) x 0.806507459306199 8
     ]
-
   ]
 
 approx :: RealFrac a => a -> Int -> a

@@ -13,34 +13,37 @@ __owenCDF1 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] ->
                                                            IO (V.Vector CDouble)
 __owenCDF1 nu t1 t2 delta1 delta2 = do
   let delta1delta2 = zip delta1 delta2
-  let infinite1 = findIndices isInfinite delta1
-  let infinite2 = findIndices
-        (\(d1,d2) -> isFinite d1 && isInfinite d2) delta1delta2
-  case infinite1 == [] && infinite2 == [] of
+  let finite = findIndices
+        (\(d1,d2) -> isFinite d1 && isFinite d2) delta1delta2
+  case length finite == n of
     True -> owenCDF1cpp nu t1 t2 delta1 delta2
     False -> do
-      let ninfinite2 = findIndices isMinusInfinite delta2
-      let finite = findIndices
-            (\(d1,d2) -> isFinite d1 && isFinite d2) delta1delta2
-      out0 <- owenCDF1cpp nu t1 t2 [delta1 !! i | i <- finite]
-                                   [delta2 !! i | i <- finite]
-      out1 <- studentCDF t1 nu [delta1 !! i | i <- ninfinite2]
-      out <- VM.replicate n (0 :: CDouble)
-      let step i j0 j1
-           | i == n = V.freeze out
-           | otherwise = do
-                case isInfinite (delta2 !! i) of
-                  True -> do
-                    VM.write out i (out1 V.! j1)
-                    step (i+1) j0 (j1+1)
-                  False -> do
-                    case isInfinite (delta1 !! i) of
-                      True -> step (i+1) j0 j1
-                      False -> do
-                        VM.write out i (out0 V.! j0)
-                        step (i+1) (j0+1) j1
-      step 0 0 0
-    where n = length delta1
+      let infinite2 = findIndices isInfinite delta2
+      case length infinite2 == n of
+        True -> studentCDF t1 nu delta1
+        False -> do
+          case all isInfinite delta1 of
+            True -> return $ V.replicate n 0
+            False -> do
+              out0 <- owenCDF1cpp nu t1 t2 [delta1 !! i | i <- finite]
+                                           [delta2 !! i | i <- finite]
+              out1 <- studentCDF t1 nu [delta1 !! i | i <- infinite2]
+              out <- VM.replicate n (0 :: CDouble)
+              let step i j0 j1
+                   | i == n = V.freeze out
+                   | otherwise = do
+                        case isInfinite (delta2 !! i) of
+                          True -> do
+                            VM.write out i (out1 V.! j1)
+                            step (i+1) j0 (j1+1)
+                          False -> do
+                            case isInfinite (delta1 !! i) of
+                              True -> step (i+1) j0 j1
+                              False -> do
+                                VM.write out i (out0 V.! j0)
+                                step (i+1) (j0+1) j1
+              step 0 0 0
+  where n = length delta1
 
 _owenCDF1 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] ->
                                                            IO (V.Vector CDouble)
@@ -77,56 +80,56 @@ _owenCDF1 nu t1 t2 delta1 delta2 = do
             False -> do
               case isInfinite t2 of -- t2 = -oo
                 True -> case_t2_minusInfinite
-                False -> do
-                  let finite = findIndices
-                                  (\(x,y) -> isFinite x && isFinite y)
-                                  (zip delta1 delta2)
-                  case length finite == n of
-                    True -> owenCDF1cpp nu t1 t2 delta1 delta2
-                    False -> do
-                      case finite == [] of
-                        True -> do
-                          let ninfinite2 = findIndices isInfinite delta2
-                          case ninfinite2 == [] of
-                            True -> return $ V.replicate n 0
-                            False -> do
-                              case length ninfinite2 == n of
-                                True -> studentCDF t1 nu delta1
-                                False -> do
-                                  out0 <- studentCDF t1 nu
-                                                 [delta1 !! i | i <- ninfinite2]
-                                  out <- VM.replicate n (0 :: CDouble)
-                                  let step i j
-                                        | i == n = V.freeze out
-                                        | otherwise = do
-                                            case isInfinite (delta2 !! i) of
-                                              True -> do
-                                                VM.write out i (out0 V.! j)
-                                                step (i+1) (j+1)
-                                              False -> step (i+1) j
-                                  step 0 0
-                        False -> do
-                          let ninfinite2 = findIndices isInfinite delta2
-                          out0 <- owenCDF1cpp nu t1 t2
-                                              [delta1 !! i | i <- finite]
-                                              [delta2 !! i | i <- finite]
-                          out1 <- studentCDF t1 nu
-                                             [delta1 !! i | i <- ninfinite2]
-                          out <- VM.replicate n (0 :: CDouble)
-                          let step i j0 j1
-                                | i == n = V.freeze out
-                                | otherwise = do
-                                    case isFinite (delta1 !! i) && isFinite (delta2 !! i) of
-                                      True -> do
-                                        VM.write out i (out0 V.! j0)
-                                        step (i+1) (j0+1) j1
-                                      False -> do
-                                        case isInfinite (delta2 !! i) of
-                                          True -> do
-                                            VM.write out i (out1 V.! j1)
-                                            step (i+1) j0 (j1+1)
-                                          False -> step (i+1) j0 j1
-                          step 0 0 0
+                False -> __owenCDF1 nu t1 t2 delta1 delta2 -- ce cas est déjà traité dans __owenCDF1 !!!!!!!!
+                  -- let finite = findIndices
+                  --                 (\(x,y) -> isFinite x && isFinite y)
+                  --                 (zip delta1 delta2)
+                  -- case length finite == n of
+                  --   True -> owenCDF1cpp nu t1 t2 delta1 delta2
+                  --   False -> do
+                  --     case finite == [] of
+                  --       True -> do
+                  --         let ninfinite2 = findIndices isInfinite delta2
+                  --         case ninfinite2 == [] of
+                  --           True -> return $ V.replicate n 0
+                  --           False -> do
+                  --             case length ninfinite2 == n of
+                  --               True -> studentCDF t1 nu delta1
+                  --               False -> do
+                  --                 out0 <- studentCDF t1 nu
+                  --                                [delta1 !! i | i <- ninfinite2]
+                  --                 out <- VM.replicate n (0 :: CDouble)
+                  --                 let step i j
+                  --                       | i == n = V.freeze out
+                  --                       | otherwise = do
+                  --                           case isInfinite (delta2 !! i) of
+                  --                             True -> do
+                  --                               VM.write out i (out0 V.! j)
+                  --                               step (i+1) (j+1)
+                  --                             False -> step (i+1) j
+                  --                 step 0 0
+                  --       False -> do
+                  --         let ninfinite2 = findIndices isInfinite delta2
+                  --         out0 <- owenCDF1cpp nu t1 t2
+                  --                             [delta1 !! i | i <- finite]
+                  --                             [delta2 !! i | i <- finite]
+                  --         out1 <- studentCDF t1 nu
+                  --                            [delta1 !! i | i <- ninfinite2]
+                  --         out <- VM.replicate n (0 :: CDouble)
+                  --         let step i j0 j1
+                  --               | i == n = V.freeze out
+                  --               | otherwise = do
+                  --                   case isFinite (delta1 !! i) && isFinite (delta2 !! i) of
+                  --                     True -> do
+                  --                       VM.write out i (out0 V.! j0)
+                  --                       step (i+1) (j0+1) j1
+                  --                     False -> do
+                  --                       case isInfinite (delta2 !! i) of
+                  --                         True -> do
+                  --                           VM.write out i (out1 V.! j1)
+                  --                           step (i+1) j0 (j1+1)
+                  --                         False -> step (i+1) j0 j1
+                  --         step 0 0 0
   where n = length delta1
         case_t2_minusInfinite :: IO (V.Vector CDouble)
         case_t2_minusInfinite = do

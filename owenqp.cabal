@@ -47,6 +47,9 @@ library
                      , OwenCDF1
                      , OwenCDF1.OwenCDF1CPP
                      , OwenCDF1.Internal
+                     , OwenCDF3
+                     , OwenCDF3.OwenCDF3CPP
+                     , OwenCDF3.Internal
   build-depends:       base >= 4.7 && < 5
                      , vector
                      , gamma
