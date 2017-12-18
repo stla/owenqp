@@ -11,8 +11,8 @@ import           Internal.Infinite
 import           OwenCDF1.OwenCDF1CPP
 import           Student
 
-__owenCDF1 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] ->
-                                                           IO (V.Vector CDouble)
+__owenCDF1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+              b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
 __owenCDF1 nu t1 t2 delta1 delta2 = do
   let delta1delta2 = zip delta1 delta2
   let finite = findIndices
@@ -30,7 +30,7 @@ __owenCDF1 nu t1 t2 delta1 delta2 = do
               out0 <- owenCDF1cpp nu t1 t2 [delta1 !! i | i <- finite]
                                            [delta2 !! i | i <- finite]
               out1 <- studentCDF t1 nu [delta1 !! i | i <- infinite2]
-              out <- VM.replicate n (0 :: CDouble)
+              out <- VM.replicate n (0 :: a)
               let step i j0 j1
                    | i == n = V.freeze out
                    | otherwise = do
@@ -47,8 +47,8 @@ __owenCDF1 nu t1 t2 delta1 delta2 = do
               step 0 0 0
   where n = length delta1
 
-_owenCDF1 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] ->
-                                                           IO (V.Vector CDouble)
+_owenCDF1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+             b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
 _owenCDF1 nu t1 t2 delta1 delta2 = do
   case delta1 == [] of
     True -> return V.empty
@@ -69,7 +69,7 @@ _owenCDF1 nu t1 t2 delta1 delta2 = do
                     True -> studentCDF t2 nu delta2
                     False -> do
                       out0 <- studentCDF t2 nu [delta2 !! i | i <- finite1]
-                      out <- VM.replicate n (0/0 :: CDouble)
+                      out <- VM.replicate n (0/0 :: a)
                       let step i j
                            | i == n = V.freeze out
                            | otherwise = do
@@ -133,7 +133,7 @@ _owenCDF1 nu t1 t2 delta1 delta2 = do
                   --                         False -> step (i+1) j0 j1
                   --         step 0 0 0
   where n = length delta1
-        case_t2_minusInfinite :: IO (V.Vector CDouble)
+        case_t2_minusInfinite :: IO (V.Vector a)
         case_t2_minusInfinite = do
           let finite2 = findIndices isFinite delta2
           case finite2 == [] of
@@ -143,7 +143,7 @@ _owenCDF1 nu t1 t2 delta1 delta2 = do
                 True -> studentCDF t1 nu delta1
                 False -> do
                   out0 <- studentCDF t1 nu [delta1 !! i | i <- finite2]
-                  out <- VM.replicate n (0/0 :: CDouble)
+                  out <- VM.replicate n (0/0 :: a)
                   let step i j
                        | i == n = V.freeze out
                        | otherwise = do

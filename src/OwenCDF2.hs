@@ -11,8 +11,8 @@ import           OwenCDF2.Internal
 import           OwenCDF4.Internal
 import           Student
 
-owenCDF2 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] ->
-                                                           IO (V.Vector CDouble)
+owenCDF2 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+            b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
 owenCDF2 nu t1 t2 delta1 delta2 = do
   case delta1 == [] of
     True -> return V.empty
@@ -38,7 +38,7 @@ owenCDF2 nu t1 t2 delta1 delta2 = do
                       out1 <- f [delta1 !! i | i <- equal]
                       out2 <- _owenCDF4 nu t2 t1 [delta2 !! i | i <- lower]
                                                  [delta1 !! i | i <- lower]
-                      out <- VM.replicate n (0 :: CDouble)
+                      out <- VM.replicate n (0 :: a)
                       let step i j0 j1 j2
                            | i == n = do
                                 V.freeze out
@@ -57,7 +57,7 @@ owenCDF2 nu t1 t2 delta1 delta2 = do
                                         step (i+1) j0 j1 (j2+1)
                       step 0 0 0 0
       where n = length delta1
-            f :: [CDouble] -> IO (V.Vector CDouble)
+            f :: [a] -> IO (V.Vector a)
             f delta = do
               case t2 < t1 && (delta /= []) of
                 True -> do

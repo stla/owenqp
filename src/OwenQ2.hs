@@ -12,11 +12,11 @@ import           Internal.NormCDF
 import           Math.Gamma.Incomplete        (lowerGammaHypGeom)
 import           OwenQ2.OwenQ2CPP
 
-gammaQhalf :: CInt -> CDouble -> CDouble
-gammaQhalf nu r = 1 - lowerGammaHypGeom (a/2) (r*r/2)
-  where a = realToFrac nu :: CDouble
+gammaQhalf :: forall a b. (Integral b, RealFloat a) => b -> a -> a
+gammaQhalf nu r = 1 - lowerGammaHypGeom ((realToFrac nu :: a)/2) (r*r/2)
 
-_owenQ2 :: CInt -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
+_owenQ2 :: forall a b. (RealFloat a, Storable a, Integral b) =>
+           b -> a -> [a] -> [a] -> IO (V.Vector a)
 _owenQ2 nu t delta r = do
     let finiteIndices = findIndices isFinite delta
     case length finiteIndices == n of
@@ -29,7 +29,7 @@ _owenQ2 nu t delta r = do
           False -> do
             owen <- owenQ2cpp nu t [delta !! i | i <- finiteIndices]
                                    [r !! i | i <- finiteIndices]
-            out <- VM.replicate n (0 :: CDouble)
+            out <- VM.replicate n (0 :: a)
             let step i j
                  | i == n = do
                       V.freeze out
@@ -48,7 +48,8 @@ _owenQ2 nu t delta r = do
             step 0 0
   where n = length delta
 
-owenQ2 :: CInt -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
+owenQ2 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+           b -> a -> [a] -> [a] -> IO (V.Vector a)
 owenQ2 nu t delta r = do
   case delta == [] of
     True -> return V.empty
@@ -56,7 +57,7 @@ owenQ2 nu t delta r = do
       case nu < 1 of
         True -> return $ V.replicate (length delta) (0/0)
         False -> do
-          case nu == (maxBound :: CInt) of
+          case nu == (maxBound :: b) of
             True  -> return $ V.fromList $ map (pnorm . ((-) t)) delta
             False -> do
               case isPlusInfinite t of

@@ -6,7 +6,7 @@ import qualified Data.Vector.Storable         as V
 import           Foreign
 import           Foreign.C.Types
 
-foreign import ccall unsafe "OwenQ2" c_OwenQ2 :: CInt -> CDouble ->
+foreign import ccall unsafe "OwenQ2" c_OwenQ2 :: CSize -> CDouble ->
           Ptr CDouble -> Ptr CDouble -> CSize -> Ptr CDouble -> IO (Ptr CDouble)
 
 owenQ2cpp :: (RealFloat a, Storable a, Integral b) =>

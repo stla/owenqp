@@ -12,7 +12,8 @@ import           Internal.NormCDF
 import           OwenCDF4.OwenCDF4CPP
 import           Student
 
-__owenCDF4 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
+__owenCDF4 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+              b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
 __owenCDF4 nu t1 t2 delta1 delta2 = do
   let delta1delta2 = zip delta1 delta2
   let infinite1 = findIndices isInfinite delta1
@@ -31,7 +32,7 @@ __owenCDF4 nu t1 t2 delta1 delta2 = do
       out1 <- studentCDF t2 nu [delta2 !! i | i <- pinfinite1]
       out2 <- studentCDF t1 nu
                 [delta1 !! i | i <- ninfinite2, i `notElem` pinfinite1]
-      out <- VM.replicate n (0 :: CDouble)
+      out <- VM.replicate n (0 :: a)
       let step i j0 j1 j2
            | i == n = do
                 V.freeze out
@@ -59,7 +60,8 @@ __owenCDF4 nu t1 t2 delta1 delta2 = do
       step 0 0 0 0
     where n = length delta1
 
-_owenCDF4 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
+_owenCDF4 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+             b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
 _owenCDF4 nu t1 t2 delta1 delta2 = do
   case delta1 == [] of
     True -> return V.empty
@@ -83,7 +85,7 @@ _owenCDF4 nu t1 t2 delta1 delta2 = do
                 True -> return $ V.fromList $
                   map (\x -> if isMinusInfinite x then 0/0 else 0) delta2
                 False -> do
-                  case nu == (maxBound :: CInt) of -- mettre dans owenCDF4 ?
+                  case nu == (maxBound :: b) of -- mettre dans owenCDF4 ?
                     True -> return $ V.fromList $
                               map (\(d1,d2) -> max 0 (pnorm(t2-d2)-pnorm(t1-d1)))
                                   (zip delta1 delta2)
