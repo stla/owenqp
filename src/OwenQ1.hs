@@ -1,7 +1,9 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module OwenQ1
   (owenQ1)
   where
 import           Data.List                    (findIndices)
+import           Data.Vector.Storable         (Storable)
 import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
 import           Foreign.C.Types
@@ -9,11 +11,11 @@ import           Internal.Infinite
 import           Math.Gamma.Incomplete        (lowerGammaHypGeom)
 import           OwenQ1.OwenQ1CPP
 
-gammaPhalf :: CInt -> CDouble -> CDouble
-gammaPhalf nu r = lowerGammaHypGeom (a/2) (r*r/2)
-  where a = realToFrac nu :: CDouble
+gammaPhalf :: forall a b. (Integral b, RealFloat a) => b -> a -> a
+gammaPhalf nu r = lowerGammaHypGeom ((realToFrac nu :: a)/2) (r*r/2)
 
-_owenQ1 :: CInt -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
+_owenQ1 :: forall a b. (RealFloat a, Storable a, Integral b) =>
+           b -> a -> [a] -> [a] -> IO (V.Vector a)
 _owenQ1 nu t delta r = do
     let finiteIndices = findIndices isFinite delta
     case length finiteIndices == n of
@@ -26,7 +28,7 @@ _owenQ1 nu t delta r = do
           False -> do
             owen <- owenQ1cpp nu t [delta !! i | i <- finiteIndices]
                                    [r !! i | i <- finiteIndices]
-            out <- VM.replicate n (0 :: CDouble)
+            out <- VM.replicate n (0 :: a)
             let step i j
                  | i == n = do
                       V.freeze out
@@ -45,7 +47,8 @@ _owenQ1 nu t delta r = do
             step 0 0
   where n = length delta
 
-owenQ1 :: CInt -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
+owenQ1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+           b -> a -> [a] -> [a] -> IO (V.Vector a)
 owenQ1 nu t delta r = do
   case delta == [] of
     True -> return V.empty
@@ -53,7 +56,7 @@ owenQ1 nu t delta r = do
       case nu < 1 of
         True -> return $ V.replicate (length delta) (0/0)
         False -> do
-          case nu == (maxBound :: CInt) || isMinusInfinite t of
+          case nu == (maxBound :: b) || isMinusInfinite t of
             True  -> return $ V.replicate (length delta) 0
             False -> do
               case isPlusInfinite t of

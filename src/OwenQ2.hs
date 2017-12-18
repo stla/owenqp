@@ -1,7 +1,9 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module OwenQ2
   (owenQ2)
   where
 import           Data.List                    (findIndices)
+import           Data.Vector.Storable         (Storable)
 import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
 import           Foreign.C.Types
@@ -38,7 +40,7 @@ _owenQ2 nu t delta r = do
                           VM.write out i (owen V.! j)
                           step (i+1) (j+1)
                         False -> do
-                          case (delta_i < 0) of
+                          case delta_i < 0 of
                             True -> do
                               VM.write out i (gammaQhalf nu (r !! i))
                               step (i+1) j

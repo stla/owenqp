@@ -1,12 +1,11 @@
 module Internal.Infinite
   where
-import Foreign.C.Types
 
-isPlusInfinite :: CDouble -> Bool
+isPlusInfinite :: RealFloat a => a -> Bool
 isPlusInfinite x = isInfinite x && x>0
 
-isMinusInfinite :: CDouble -> Bool
+isMinusInfinite :: RealFloat a => a -> Bool
 isMinusInfinite x = isInfinite x && x<0
 
-isFinite :: CDouble -> Bool
+isFinite :: RealFloat a => a -> Bool
 isFinite = not . isInfinite

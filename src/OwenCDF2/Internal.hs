@@ -1,7 +1,9 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module OwenCDF2.Internal
   (_owenCDF2)
   where
 import           Data.List                    (findIndices)
+import           Data.Vector.Storable         (Storable)
 import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
 import           Foreign.C.Types

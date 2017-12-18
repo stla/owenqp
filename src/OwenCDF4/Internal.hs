@@ -1,8 +1,10 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module OwenCDF4.Internal
   (_owenCDF4)
   where
 import           Data.List                    (findIndices)
-import qualified Data.Vector.Storable as V
+import           Data.Vector.Storable         (Storable)
+import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
 import           Foreign.C.Types
 import           Internal.Infinite
@@ -37,11 +39,11 @@ __owenCDF4 nu t1 t2 delta1 delta2 = do
                 let delta1_i = delta1 !! i
                 case isInfinite delta1_i of
                   True -> do
-                    case delta1_i > 0 of -- inutile delta1 > delta2
-                      True -> do
-                        VM.write out i (out1 V.! j1)
-                        step (i+1) j0 (j1+1) j2
-                      False -> step (i+1) j0 j1 j2
+                    -- case delta1_i > 0 of -- inutile delta1 > delta2
+                    --   True -> do
+                    VM.write out i (out1 V.! j1)
+                    step (i+1) j0 (j1+1) j2
+                      -- False -> step (i+1) j0 j1 j2
                   False -> do
                     let delta2_i = delta2 !! i
                     case isInfinite delta2_i of

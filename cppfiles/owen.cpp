@@ -311,32 +311,33 @@ double* studentCDF_C(double q, int nu, double* delta, size_t J){
   return C;
 }
 
-double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
+double* studentCDF(double q, size_t nu, double* delta, size_t J, double* out){
+  size_t j;
   if(nu < 1){
-    for(int j=0; j<J; j++){
+    for(j=0; j<J; j++){
       out[j] = nan("");
     }
     return out;
   }
-  if(nu > INT_MAX){
-    for(int j=0; j<J; j++){
-      out[j] = pnorm(q - delta[j]);
-    }
-    return out;
-  }
-  if(fabs(q) > DBL_MAX){
-    for(int j=0; j<J; j++){
-      out[j] = fabs(delta[j]) > DBL_MAX ?
-                  (std::signbit(q) == std::signbit(delta[j]) ?
-                    nan("") :
-                    (std::signbit(q) ? 0 : 1)) :
-                  (std::signbit(q) ? 0 : 1);
-    }
-    return out;
-  }
+  // if(nu > INT_MAX){
+  //   for(int j=0; j<J; j++){
+  //     out[j] = pnorm(q - delta[j]);
+  //   }
+  //   return out;
+  // }
+  // if(fabs(q) > DBL_MAX){
+  //   for(int j=0; j<J; j++){
+  //     out[j] = fabs(delta[j]) > DBL_MAX ?
+  //                 (std::signbit(q) == std::signbit(delta[j]) ?
+  //                   nan("") :
+  //                   (std::signbit(q) ? 0 : 1)) :
+  //                 (std::signbit(q) ? 0 : 1);
+  //   }
+  //   return out;
+  // }
   if(nu==1){
     double* C = studentCDF_C(q, nu, delta, J);
-    for(int j=0; j<J; j++){
+    for(j=0; j<J; j++){
       out[j] = C[j];
     }
     delete[] C;
@@ -347,7 +348,6 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
   const mp::float128 b = nu/(nu+qq);
   const mp::float128 sb = mp::sqrt(b);
   std::vector<mp::float128> dsb(J);
-  int j;
   for(j=0; j<J; j++){
     dsb[j] = delta[j] * sb;
   }
@@ -362,7 +362,7 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
     if(nu>3){
       std::vector<mp::float128> A(nu-3);
       A[0] = 1.0;
-      int k;
+      size_t k;
       if(nu>4){
         for(k=1; k<nu-3; k++){
           A[k] = 1.0/k/A[k-1];
@@ -375,10 +375,10 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
       }
     }
   }
+  std::vector<mp::float128> sum(J);
+  size_t i;
   if(nu%2==1){
     double* C = studentCDF_C(q, nu, delta, J);
-    std::vector<mp::float128> sum(J);
-    int i;
     for(i=1; i<nu-1; i+=2){
       for(j=0; j<J; j++){
         sum[j] += M[i][j];
@@ -390,8 +390,6 @@ double* studentCDF(double q, int nu, double* delta, size_t J, double* out){
     delete[] C;
     return out;
   }
-  int i;
-  std::vector<mp::float128> sum(J);
   for(i=0; i<nu-1; i+=2){
     for(j=0; j<J; j++){
       sum[j] += M[i][j];
