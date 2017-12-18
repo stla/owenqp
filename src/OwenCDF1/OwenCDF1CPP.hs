@@ -1,12 +1,11 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-
 module OwenCDF1.OwenCDF1CPP
   where
 import qualified Data.Vector.Storable         as V
 import           Foreign
 import           Foreign.C.Types
 
-foreign import ccall unsafe "OwenCDF1" c_OwenCDF1 :: CInt -> CDouble ->
+foreign import ccall unsafe "OwenCDF1" c_OwenCDF1 :: CSize -> CDouble ->
                                        CDouble -> Ptr CDouble -> Ptr CDouble ->
                                         CSize -> Ptr CDouble -> IO (Ptr CDouble)
 owenCDF1cpp :: (RealFloat a, Storable a, Integral b) =>

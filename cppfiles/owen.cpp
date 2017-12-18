@@ -26,9 +26,6 @@ double pnorm(double q){
   if(std::isnan(q)){
     return nan("");
   }
-  // if(fabs(q) > DBL_MAX){ // inutile (à confirmer mais je suis sûr)
-  //   return q > 0 ? 1 : 0;
-  // }
   return m::erfc(-q * one_div_root_two)/2.0;
 }
 
@@ -37,9 +34,6 @@ mp::float128 dnorm128(mp::float128 x){
 }
 
 mp::float128 pnorm128(mp::float128 q){
-  if(fabs(q) > DBL_MAX){
-    return q>0 ? mp::float128(1) : mp::float128(0);
-  }
   return m::erfc(-q * one_div_root_two128)/2;
 }
 
@@ -347,13 +341,10 @@ double* studentCDF(double q, size_t nu, double* delta, size_t J, double* out){
   const mp::float128 a = sign(q)*mp::sqrt(qq/nu);
   const mp::float128 b = nu/(nu+qq);
   const mp::float128 sb = mp::sqrt(b);
-  std::vector<mp::float128> dsb(J);
-  for(j=0; j<J; j++){
-    dsb[j] = delta[j] * sb;
-  }
   mp::float128 M[nu-1][J];
   for(j=0; j<J ; j++){
-    M[0][j] = a * sb * dnorm128(dsb[j]) * pnorm128(a*dsb[j]);
+    dsb = delta[j] * sb;
+    M[0][j] = a * sb * dnorm128(dsb) * pnorm128(a*dsb);
   }
   if(nu>2){
     for(j=0; j<J; j++){
@@ -643,7 +634,8 @@ double* OwenQ2
 }
 
 // --- Owen cumulative function 4 ------------------------------------------- //
-double* OwenCDF4_C(int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
+double* OwenCDF4_C
+       (int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
   const double a1 = sign(t1)*sqrt(t1*t1/nu);
   const double sb1 = sqrt(nu/(nu+t1*t1));
   const double a2 = sign(t2)*sqrt(t2*t2/nu);
@@ -679,13 +671,14 @@ double* OwenCDF4_C(int nu, double t1, double t2, double* delta1, double* delta2,
   return C;
 }
 
-double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, size_t J, double* out){
-  if(nu < 1){
-    for(int j=0; j<J; j++){
-      out[j] = nan("");
-    }
-    return out;
-  }
+double* OwenCDF4(size_t nu, double t1, double t2, double* delta1,
+                                         double* delta2, size_t J, double* out){
+  // if(nu < 1){
+  //   for(int j=0; j<J; j++){
+  //     out[j] = nan("");
+  //   }
+  //   return out;
+  // }
   // if(t1 <= t2){
   //   double* S1 = new double[J];
   //   S1 = studentCDF(t1, nu, delta1, J, S1);
@@ -762,9 +755,10 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
   //   }
   //   return out;
   // }
+  size_t j;
   if(nu == 1){
     double* C = OwenCDF4_C(nu, t1, t2, delta1, delta2, J);
-    for(int j=0; j<J; j++){
+    for(j=0; j<J; j++){
       out[j] = C[j];
     }
     delete[] C;
@@ -774,24 +768,25 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
 //  const mp::float128 a1 = sign(t1)*mp::sqrt(t1t1/nu);
   const mp::float128 b1 = nu/(nu+t1t1);
   const mp::float128 sb1 = mp::sqrt(b1);
-  mp::float128 ab1, asb1;
-  if(fabs(t1) > DBL_MAX){ // est-ce utile ?..
-    ab1 = mp::float128(0);
-    asb1 = mp::float128(sign(t1));
-  }else{
-    ab1 = mp::float128(sqrt(nu) * 1/(nu/t1+t1));
-    asb1 = sign(t1) * mp::sqrt(1/(nu/t1t1+1));
-  }
+  // mp::float128 ab1, asb1;
+  // if(fabs(t1) > DBL_MAX){ // est-ce utile ?..
+  //   ab1 = mp::float128(0);
+  //   asb1 = mp::float128(sign(t1));
+  // }else{
+  const mp::float128 ab1 = mp::float128(sqrt(nu) * 1/(nu/t1+t1));
+  const mp::float128 asb1 = sign(t1) * mp::sqrt(1/(nu/t1t1+1));
   const mp::float128 t2t2(t2*t2);
 //  const mp::float128 a2 = sign(t2)*mp::sqrt(t2t2/nu);
   const mp::float128 b2 = nu/(nu+t2t2);
   const mp::float128 sb2 = mp::sqrt(b2);
-  const mp::float128 ab2 = fabs(t2) > DBL_MAX ?
-                             mp::float128(0) :
-                             mp::float128(sqrt(nu) * 1/(nu/t2+t2));
-  const mp::float128 asb2 = fabs(t2) > DBL_MAX ?
-                              mp::float128(sign(t2)) :
-                              sign(t2) * mp::sqrt(1/(nu/t2t2+1));
+  // const mp::float128 ab2 = fabs(t2) > DBL_MAX ?
+  //                            mp::float128(0) :
+  //                            mp::float128(sqrt(nu) * 1/(nu/t2+t2));
+  // const mp::float128 asb2 = fabs(t2) > DBL_MAX ?
+  //                             mp::float128(sign(t2)) :
+  //                             sign(t2) * mp::sqrt(1/(nu/t2t2+1));
+  const mp::float128 ab2 = mp::float128(sqrt(nu)/(nu/t2+t2));
+  const mp::float128 asb2 = sign(t2) * mp::sqrt(1/(nu/t2t2+1));
   mp::float128 R[J];
   mp::float128 dnormdsb1[J];
   mp::float128 dnormdsb2[J];
@@ -801,11 +796,10 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
   mp::float128 dabminusRoversb2[J];
   mp::float128 dnormR[J];
   mp::float128 RdnormR[J];
-  const int n = nu-1;
+  const size_t n = nu-1;
   mp::float128 M1[n][J];
   mp::float128 M2[n][J];
   mp::float128 H[n][J];
-  int j;
   for(j=0; j<J; j++){
     R[j] = mp::float128(sqrt(nu)*(delta1[j]-delta2[j])/(t1-t2));
     dnormdsb1[j] = dnorm128(delta1[j] * sb1);
@@ -851,7 +845,7 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
         L1[0][j] = ab1 * RdnormR[j] * 0.5*dnorm128(asb1*Roversb1[j]-delta1[j]);
         L2[0][j] = ab2 * RdnormR[j] * 0.5*dnorm128(asb2*Roversb2[j]-delta2[j]);
       }
-      int k;
+      size_t k;
       for(k=2; k<n; k++){
         A[k] = 1.0/k/A[k-1];
       }
@@ -875,7 +869,7 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
     }
   }
   std::vector<mp::float128> sum(J);
-  int i;
+  size_t i;
   if(nu % 2 == 0){
     for(i=0; i<n; i+=2){
       for(j=0; j<J; j++){
@@ -903,7 +897,8 @@ double* OwenCDF4(int nu, double t1, double t2, double* delta1, double* delta2, s
 }
 
 // --- Owen cumulative function 2 ------------------------------------------- //
-double* OwenCDF2_C(int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
+double* OwenCDF2_C
+       (int nu, double t1, double t2, double* delta1, double* delta2, size_t J){
   const double sb1 = sqrt(nu/(nu+t1*t1));
   const double sb2 = sqrt(nu/(nu+t2*t2));
   size_t j;
@@ -935,7 +930,8 @@ double* OwenCDF2_C(int nu, double t1, double t2, double* delta1, double* delta2,
   return C;
 }
 
-double* OwenCDF2(int nu, double t1, double t2, double* delta1, double* delta2, size_t J, double* out){
+double* OwenCDF2(size_t nu, double t1, double t2, double* delta1,
+                                         double* delta2, size_t J, double* out){
   size_t j;
   if(nu == 1){
     double* C = OwenCDF2_C(nu, t1, t2, delta1, delta2, J);
@@ -953,7 +949,7 @@ double* OwenCDF2(int nu, double t1, double t2, double* delta1, double* delta2, s
   const mp::float128 t2t2(t2*t2);
   const mp::float128 b2 = nu/(nu+t2t2);
   const mp::float128 sb2 = mp::sqrt(b2);
-  const mp::float128 ab2 = mp::float128(sqrt(nu) * 1/(nu/t2+t2));
+  const mp::float128 ab2 = mp::float128(sqrt(nu)/(nu/t2+t2));
   const mp::float128 asb2 = sign(t2) * mp::sqrt(1/(nu/t2t2+1));
   mp::float128 R[J];
   mp::float128 dnormdsb1[J];
@@ -1107,12 +1103,12 @@ double* OwenCDF1
   const mp::float128 t1t1(t1*t1);
   const mp::float128 b1 = nu/(nu+t1t1);
   const mp::float128 sb1 = mp::sqrt(b1);
-  const mp::float128 ab1 = mp::float128(sqrt(nu) * 1/(nu/t1+t1));
+  const mp::float128 ab1 = mp::float128(sqrt(nu)/(nu/t1+t1));
   const mp::float128 asb1 = sign(t1) * mp::sqrt(1/(nu/t1t1+1));
   const mp::float128 t2t2(t2*t2);
   const mp::float128 b2 = nu/(nu+t2t2);
   const mp::float128 sb2 = mp::sqrt(b2);
-  const mp::float128 ab2 = mp::float128(sqrt(nu) * 1/(nu/t2+t2));
+  const mp::float128 ab2 = mp::float128(sqrt(nu)/(nu/t2+t2));
   const mp::float128 asb2 = sign(t2) * mp::sqrt(1/(nu/t2t2+1));
   mp::float128 R[J];
   mp::float128 dnormdsb1[J];
@@ -1260,12 +1256,12 @@ double* OwenCDF3(size_t nu, double t1, double t2, double* delta1,
   const mp::float128 t1t1(t1*t1);
   const mp::float128 b1 = nu/(nu+t1t1);
   const mp::float128 sb1 = mp::sqrt(b1);
-  const mp::float128 ab1 = mp::float128(sqrt(nu) * 1/(nu/t1+t1));
+  const mp::float128 ab1 = mp::float128(sqrt(nu)/(nu/t1+t1));
   const mp::float128 asb1 = sign(t1) * mp::sqrt(1/(nu/t1t1+1));
   const mp::float128 t2t2(t2*t2);
   const mp::float128 b2 = nu/(nu+t2t2);
   const mp::float128 sb2 = mp::sqrt(b2);
-  const mp::float128 ab2 = mp::float128(sqrt(nu) * 1/(nu/t2+t2));
+  const mp::float128 ab2 = mp::float128(sqrt(nu)/(nu/t2+t2));
   const mp::float128 asb2 = sign(t2) * mp::sqrt(1/(nu/t2t2+1));
   mp::float128 R[J];
   mp::float128 dnormdsb1[J];
