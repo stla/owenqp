@@ -37,7 +37,7 @@ __owenCDF4 nu t1 t2 delta1 delta2 = do
                 let delta1_i = delta1 !! i
                 case isInfinite delta1_i of
                   True -> do
-                    case delta1_i > 0 of
+                    case delta1_i > 0 of -- inutile delta1 > delta2
                       True -> do
                         VM.write out i (out1 V.! j1)
                         step (i+1) j0 (j1+1) j2
@@ -81,7 +81,7 @@ _owenCDF4 nu t1 t2 delta1 delta2 = do
                 True -> return $ V.fromList $
                   map (\x -> if isMinusInfinite x then 0/0 else 0) delta2
                 False -> do
-                  case nu == (maxBound :: CInt) of -- entier > maxBound ne peut pas arriver!
+                  case nu == (maxBound :: CInt) of -- mettre dans owenCDF4 ?
                     True -> return $ V.fromList $
                               map (\(d1,d2) -> max 0 (pnorm(t2-d2)-pnorm(t1-d1)))
                                   (zip delta1 delta2)

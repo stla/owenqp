@@ -41,17 +41,23 @@ _studentCDF q nu delta = do
 
 studentCDF :: CDouble -> CInt -> [CDouble] -> IO (V.Vector CDouble)
 studentCDF q nu delta = do
-    case nu >= (maxBound :: CInt) of
-      True  -> return $ V.fromList (map (\x -> pnorm(q-x)) delta)
-      False -> do
-        case isInfinite q of
-          True -> return $ V.fromList $ map f delta
-          False -> _studentCDF q nu delta
-        where f d =
-                if isInfinite d
-                  then
-                    if signum q == signum d
-                      then 0/0
-                      else if q>0 then 1 else 0
-                  else
-                    if q>0 then 1 else 0
+  case delta == [] of
+    True -> return V.empty
+    False -> do
+      case nu < 1 of
+        True -> return $ V.replicate (length delta) (0/0)
+        False -> do
+          case nu == (maxBound :: CInt) of
+            True  -> return $ V.fromList (map (\x -> pnorm(q-x)) delta)
+            False -> do
+              case isInfinite q of
+                True -> return $ V.fromList $ map f delta
+                False -> _studentCDF q nu delta
+              where f d =
+                      if isInfinite d
+                        then
+                          if signum q == signum d
+                            then 0/0
+                            else if q>0 then 1 else 0
+                        else
+                          if q>0 then 1 else 0

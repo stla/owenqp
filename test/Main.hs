@@ -5,6 +5,7 @@ import           OwenQ1
 import OwenQ2
 import           OwenT
 import OwenCDF2
+import OwenCDF1
 import           Student
 import           Test.Tasty                       (defaultMain, testGroup)
 import           Test.Tasty.HUnit                 (testCase)
@@ -40,6 +41,11 @@ owenCDF4_ nu t1 t2 delta1 delta2 = do
   value2 <- owenQ1 nu t1 [delta1] [r]
   return $ (value1 V.! 0) - (value2 V.! 0)
   where r = sqrt(fromIntegral nu) * (delta1-delta2) / (t1-t2)
+
+owenCDF1' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenCDF1' nu t1 t2 delta1 delta2 = do
+  value <- owenCDF1 nu t1 t2 [delta1] [delta2]
+  return $ value V.! 0
 
 owenCDF2' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
 owenCDF2' nu t1 t2 delta1 delta2 = do
@@ -85,7 +91,7 @@ main = defaultMain $
       testCase "OwenQ1 + OwenQ2 = studentCDF - test1" $ do
         o1 <- owenQ1' 6 2 2 1
         o2 <- owenQ2' 6 2 2 1
-        s <- studentCDF' 2 4 2
+        s <- studentCDF' 2 6 2
         (@~?) (o1+o2) s 14,
       testCase "OwenQ1 + OwenQ2 = studentCDF - test2" $ do
         o1 <- owenQ1' 7 2 2 1
@@ -101,7 +107,17 @@ main = defaultMain $
       testCase "OwenCDF2 - value 2" $ do
         x <- owenCDF2' 5 2 1 3 2
         (@~?) x 0.0353568969628651 8
+    ],
+    testGroup "OwenCDF1"
+    [
+      testCase "OwenCDF1 - value 1" $ do
+        x <- owenCDF1' 6 2 1 3 2
+        (@~?) x 0.1404299569049368 7,
+      testCase "OwenCDF1 - value 2" $ do
+        x <- owenCDF1' 5 2 1 3 2
+        (@~?) x 0.1394458271284726 7
     ]
+
   ]
 
 approx :: RealFrac a => a -> Int -> a
