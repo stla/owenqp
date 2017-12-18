@@ -2,14 +2,15 @@ module OwenCDF4
   (owenCDF4)
   where
 import           Data.List                    (findIndices)
-import qualified Data.Vector.Storable as V
+import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
 import           Foreign.C.Types
+import           OwenCDF2.Internal
 import           OwenCDF4.Internal
 import           Student
-import           OwenCDF2.Internal
 
-owenCDF4 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] -> IO (V.Vector CDouble)
+owenCDF4 :: CInt -> CDouble -> CDouble -> [CDouble] -> [CDouble] ->
+                                                           IO (V.Vector CDouble)
 owenCDF4 nu t1 t2 delta1 delta2 = do
   case delta1 == [] of
     True -> return V.empty
@@ -33,8 +34,8 @@ owenCDF4 nu t1 t2 delta1 delta2 = do
                       out0 <- _owenCDF4 nu t1 t2 [delta1 !! i | i <- lower]
                                                  [delta2 !! i | i <- lower]
                       out1 <- f [delta1 !! i | i <- equal]
-                      out2 <- _owenCDF2 nu t2 t1 [delta2 !! i | i <- lower]
-                                                 [delta1 !! i | i <- lower]
+                      out2 <- _owenCDF2 nu t2 t1 [delta2 !! i | i <- higher]
+                                                 [delta1 !! i | i <- higher]
                       out <- VM.replicate n (0 :: CDouble)
                       let step i j0 j1 j2
                            | i == n = do
