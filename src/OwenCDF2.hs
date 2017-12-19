@@ -6,7 +6,6 @@ import           Data.List                    (findIndices)
 import           Data.Vector.Storable         (Storable)
 import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
-import           Foreign.C.Types
 import           OwenCDF2.Internal
 import           OwenCDF4.Internal
 import           Student

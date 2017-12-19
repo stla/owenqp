@@ -3,9 +3,9 @@ module Main (main)
 import qualified Data.Vector.Storable             as V
 import           Foreign.C.Types
 import           OwenCDF1
-import           owenCDF2'
+import           OwenCDF2
 import           OwenCDF3
-import           owenCDF4'
+import           OwenCDF4
 import           OwenQ1
 import           OwenQ2
 import           OwenT
@@ -44,9 +44,9 @@ owenCDF4_ nu t1 t2 delta1 delta2 = do
   return $ (value1 V.! 0) - (value2 V.! 0)
   where r = sqrt(fromIntegral nu) * (delta1-delta2) / (t1-t2)
 
-owenCDF1' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
-owenCDF1' nu t1 t2 delta1 delta2 = do
-  value <- owenCDF1 nu t1 t2 [delta1] [delta2]
+owenCDF1'' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenCDF1'' nu t1 t2 delta1 delta2 = do
+  value <- owenCDF1' nu t1 t2 [delta1] [delta2]
   return $ value V.! 0
 
 owenCDF2'' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
@@ -54,9 +54,9 @@ owenCDF2'' nu t1 t2 delta1 delta2 = do
   value <- owenCDF2' nu t1 t2 [delta1] [delta2]
   return $ value V.! 0
 
-owenCDF3' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
-owenCDF3' nu t1 t2 delta1 delta2 = do
-  value <- owenCDF3 nu t1 t2 [delta1] [delta2]
+owenCDF3'' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenCDF3'' nu t1 t2 delta1 delta2 = do
+  value <- owenCDF3' nu t1 t2 [delta1] [delta2]
   return $ value V.! 0
 
 main :: IO ()
@@ -118,33 +118,33 @@ main = defaultMain $
     testGroup "OwenCDF1"
     [
       testCase "OwenCDF1 - value 1" $ do
-        x <- owenCDF1' 6 2 1 3 2
+        x <- owenCDF1'' 6 2 1 3 2
         (@~?) x 0.1404299569049368 7,
       testCase "OwenCDF1 - value 2" $ do
-        x <- owenCDF1' 5 2 1 3 2
+        x <- owenCDF1'' 5 2 1 3 2
         (@~?) x 0.1394458271284726 7
     ],
     testGroup "OwenCDF3"
     [
       testCase "OwenCDF3 - value 1" $ do
-        x <- owenCDF3' 6 2 1 3 2
+        x <- owenCDF3'' 6 2 1 3 2
         (@~?) x 0.809137482066635 8,
       testCase "OwenCDF3 - value 2" $ do
-        x <- owenCDF3' 5 2 1 3 2
+        x <- owenCDF3'' 5 2 1 3 2
         (@~?) x 0.806507459306199 8
     ],
     testGroup "OwenCDF"
     [
       testCase "The OwenCDF sum to one - test 1" $ do
-        x1 <- owenCDF1' 6 2 1 2 1
+        x1 <- owenCDF1'' 6 2 1 2 1
         x2 <- owenCDF2'' 6 2 1 2 1
-        x3 <- owenCDF3' 6 2 1 2 1
+        x3 <- owenCDF3'' 6 2 1 2 1
         x4 <- owenCDF4'' 6 2 1 2 1
         (@~?) (x1+x2+x3+x4) 1 15,
       testCase "The OwenCDF sum to one - test 2" $ do
-        x1 <- owenCDF1' 5 2 1 2 1
+        x1 <- owenCDF1'' 5 2 1 2 1
         x2 <- owenCDF2'' 5 2 1 2 1
-        x3 <- owenCDF3' 5 2 1 2 1
+        x3 <- owenCDF3'' 5 2 1 2 1
         x4 <- owenCDF4'' 5 2 1 2 1
         (@~?) (x1+x2+x3+x4) 1 15
     ]

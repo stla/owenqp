@@ -4,6 +4,9 @@ module OwenExport
 import qualified Data.Vector.Storable as V
 import           Foreign
 import           Foreign.C
+import           OwenCDF1
+import           OwenCDF2
+import           OwenCDF3
 import           OwenCDF4
 import           OwenQ1
 import           OwenT
@@ -53,4 +56,43 @@ owenCDF4export nu t1 t2 delta1 delta2 n result = do
   n <- peek n
   delta1 <- peekArray (fromIntegral n) delta1
   delta2 <- peekArray (fromIntegral n) delta2
-  (>>=) (fmap V.toList $ owenCDF4 nu t1 t2 delta1 delta2) (pokeArray result)
+  (>>=) (fmap V.toList $ owenCDF4' nu t1 t2 delta1 delta2) (pokeArray result)
+
+foreign export ccall owenCDF3export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble ->
+                  Ptr CDouble -> Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
+owenCDF3export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
+                                Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
+owenCDF3export nu t1 t2 delta1 delta2 n result = do
+  nu <- peek nu
+  t1 <- peek t1
+  t2 <- peek t2
+  n <- peek n
+  delta1 <- peekArray (fromIntegral n) delta1
+  delta2 <- peekArray (fromIntegral n) delta2
+  (>>=) (fmap V.toList $ owenCDF3' nu t1 t2 delta1 delta2) (pokeArray result)
+
+foreign export ccall owenCDF2export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble ->
+                  Ptr CDouble -> Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
+owenCDF2export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
+                                Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
+owenCDF2export nu t1 t2 delta1 delta2 n result = do
+  nu <- peek nu
+  t1 <- peek t1
+  t2 <- peek t2
+  n <- peek n
+  delta1 <- peekArray (fromIntegral n) delta1
+  delta2 <- peekArray (fromIntegral n) delta2
+  (>>=) (fmap V.toList $ owenCDF2' nu t1 t2 delta1 delta2) (pokeArray result)
+
+foreign export ccall owenCDF1export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble ->
+                  Ptr CDouble -> Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
+owenCDF1export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
+                                Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
+owenCDF1export nu t1 t2 delta1 delta2 n result = do
+  nu <- peek nu
+  t1 <- peek t1
+  t2 <- peek t2
+  n <- peek n
+  delta1 <- peekArray (fromIntegral n) delta1
+  delta2 <- peekArray (fromIntegral n) delta2
+  (>>=) (fmap V.toList $ owenCDF1' nu t1 t2 delta1 delta2) (pokeArray result)

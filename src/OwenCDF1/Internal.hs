@@ -1,24 +1,23 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module OwenCDF1.Internal
-  (_owenCDF1)
+  (__owenCDF1)
   where
 import           Data.List                    (findIndices)
 import           Data.Vector.Storable         (Storable)
 import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
-import           Foreign.C.Types
 import           Internal.Infinite
 import           OwenCDF1.OwenCDF1CPP
 import           Student
 
-__owenCDF1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
-              b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
-__owenCDF1 nu t1 t2 delta1 delta2 = do
+___owenCDF1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+               Int -> b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
+___owenCDF1 algo nu t1 t2 delta1 delta2 = do
   let delta1delta2 = zip delta1 delta2
   let finite = findIndices
         (\(d1,d2) -> isFinite d1 && isFinite d2) delta1delta2
   case length finite == n of
-    True -> owenCDF1cpp nu t1 t2 delta1 delta2
+    True -> owenCDF1cpp algo nu t1 t2 delta1 delta2
     False -> do
       let infinite2 = findIndices isInfinite delta2
       case length infinite2 == n of
@@ -27,8 +26,8 @@ __owenCDF1 nu t1 t2 delta1 delta2 = do
           case all isInfinite delta1 of
             True -> return $ V.replicate n 0
             False -> do
-              out0 <- owenCDF1cpp nu t1 t2 [delta1 !! i | i <- finite]
-                                           [delta2 !! i | i <- finite]
+              out0 <- owenCDF1cpp algo nu t1 t2 [delta1 !! i | i <- finite]
+                                                [delta2 !! i | i <- finite]
               out1 <- studentCDF t1 nu [delta1 !! i | i <- infinite2]
               out <- VM.replicate n (0 :: a)
               let step i j0 j1
@@ -47,9 +46,9 @@ __owenCDF1 nu t1 t2 delta1 delta2 = do
               step 0 0 0
   where n = length delta1
 
-_owenCDF1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
-             b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
-_owenCDF1 nu t1 t2 delta1 delta2 = do
+__owenCDF1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+              Int -> b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
+__owenCDF1 algo nu t1 t2 delta1 delta2 = do
   case delta1 == [] of
     True -> return V.empty
     False -> do
@@ -82,7 +81,7 @@ _owenCDF1 nu t1 t2 delta1 delta2 = do
             False -> do
               case isInfinite t2 of -- t2 = -oo
                 True -> case_t2_minusInfinite
-                False -> __owenCDF1 nu t1 t2 delta1 delta2 -- ce cas est déjà traité dans __owenCDF1 !!!!!!!!
+                False -> ___owenCDF1 algo nu t1 t2 delta1 delta2 -- ce cas est déjà traité dans __owenCDF1 !!!!!!!!
                   -- let finite = findIndices
                   --                 (\(x,y) -> isFinite x && isFinite y)
                   --                 (zip delta1 delta2)
