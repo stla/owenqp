@@ -22,14 +22,14 @@ studentCDF' q nu delta = do
   value <- studentCDF q nu [delta]
   return $ value V.! 0
 
-owenQ1' :: CInt -> CDouble -> CDouble -> CDouble -> IO CDouble
-owenQ1' nu t delta r = do
-  value <- owenQ1 nu t [delta] [r]
+owenQ1'' :: CInt -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenQ1'' nu t delta r = do
+  value <- owenQ1' nu t [delta] [r]
   return $ value V.! 0
 
-owenQ2' :: CInt -> CDouble -> CDouble -> CDouble -> IO CDouble
-owenQ2' nu t delta r = do
-  value <- owenQ2 nu t [delta] [r]
+owenQ2'' :: CInt -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenQ2'' nu t delta r = do
+  value <- owenQ2' nu t [delta] [r]
   return $ value V.! 0
 
 owenCDF4' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
@@ -39,8 +39,8 @@ owenCDF4' nu t1 t2 delta1 delta2 = do
 
 owenCDF4_ :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
 owenCDF4_ nu t1 t2 delta1 delta2 = do
-  value1 <- owenQ1 nu t2 [delta2] [r]
-  value2 <- owenQ1 nu t1 [delta1] [r]
+  value1 <- owenQ1' nu t2 [delta2] [r]
+  value2 <- owenQ1' nu t1 [delta1] [r]
   return $ (value1 V.! 0) - (value2 V.! 0)
   where r = sqrt(fromIntegral nu) * (delta1-delta2) / (t1-t2)
 
@@ -89,20 +89,20 @@ main = defaultMain $
     testGroup "OwenQ1"
     [
       testCase "OwenQ1 for large R = studentCDF" $ do
-        x1 <- owenQ1' 4 3 2 100
+        x1 <- owenQ1'' 4 3 2 100
         x2 <- studentCDF' 3 4 2
         (@~?) x1 x2 11
     ],
     testGroup "OwenQ2"
     [
       testCase "OwenQ1 + OwenQ2 = studentCDF - test1" $ do
-        o1 <- owenQ1' 6 2 2 1
-        o2 <- owenQ2' 6 2 2 1
+        o1 <- owenQ1'' 6 2 2 1
+        o2 <- owenQ2'' 6 2 2 1
         s <- studentCDF' 2 6 2
         (@~?) (o1+o2) s 14,
       testCase "OwenQ1 + OwenQ2 = studentCDF - test2" $ do
-        o1 <- owenQ1' 7 2 2 1
-        o2 <- owenQ2' 7 2 2 1
+        o1 <- owenQ1'' 7 2 2 1
+        o2 <- owenQ2'' 7 2 2 1
         s <- studentCDF' 2 7 2
         (@~?) (o1+o2) s 14
     ],
