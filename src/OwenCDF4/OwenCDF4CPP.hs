@@ -6,12 +6,12 @@ import qualified Data.Vector.Storable         as V
 import           Foreign
 import           Foreign.C.Types
 
-foreign import ccall unsafe "OwenCDF4" c_OwenCDF4 :: CSize -> CDouble -> CDouble ->
-          Ptr CDouble -> Ptr CDouble -> CSize -> Ptr CDouble -> IO (Ptr CDouble)
-
+foreign import ccall unsafe "OwenCDF4" c_OwenCDF4 :: CInt -> CSize -> CDouble ->
+                CDouble -> Ptr CDouble -> Ptr CDouble -> CSize -> Ptr CDouble ->
+                                                                IO (Ptr CDouble)
 owenCDF4cpp :: (RealFloat a, Storable a, Integral b) =>
-               b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
-owenCDF4cpp nu t1 t2 delta1 delta2 = do
+               Int -> b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
+owenCDF4cpp algo nu t1 t2 delta1 delta2 = do
     case delta1 == [] of
       True -> return V.empty
       False -> do
@@ -21,7 +21,7 @@ owenCDF4cpp nu t1 t2 delta1 delta2 = do
         V.unsafeWith delta1vec $
           \v1 -> V.unsafeWith delta2vec $
             \v2 -> withForeignPtr fptr $
-                    c_OwenCDF4 (fromIntegral nu) (realToFrac t1) (realToFrac t2)
-                               v1 v2 (fromIntegral n)
+              c_OwenCDF4 (fromIntegral algo) (fromIntegral nu) (realToFrac t1)
+                         (realToFrac t2) v1 v2 (fromIntegral n)
         return $ V.map realToFrac (V.unsafeFromForeignPtr0 fptr n)
   where n = length delta1

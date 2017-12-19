@@ -3,9 +3,9 @@ module Main (main)
 import qualified Data.Vector.Storable             as V
 import           Foreign.C.Types
 import           OwenCDF1
-import           OwenCDF2
+import           owenCDF2'
 import           OwenCDF3
-import           OwenCDF4
+import           owenCDF4'
 import           OwenQ1
 import           OwenQ2
 import           OwenT
@@ -32,9 +32,9 @@ owenQ2'' nu t delta r = do
   value <- owenQ2' nu t [delta] [r]
   return $ value V.! 0
 
-owenCDF4' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
-owenCDF4' nu t1 t2 delta1 delta2 = do
-  value <- owenCDF4 nu t1 t2 [delta1] [delta2]
+owenCDF4'' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenCDF4'' nu t1 t2 delta1 delta2 = do
+  value <- owenCDF4' nu t1 t2 [delta1] [delta2]
   return $ value V.! 0
 
 owenCDF4_ :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
@@ -49,9 +49,9 @@ owenCDF1' nu t1 t2 delta1 delta2 = do
   value <- owenCDF1 nu t1 t2 [delta1] [delta2]
   return $ value V.! 0
 
-owenCDF2' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
-owenCDF2' nu t1 t2 delta1 delta2 = do
-  value <- owenCDF2 nu t1 t2 [delta1] [delta2]
+owenCDF2'' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
+owenCDF2'' nu t1 t2 delta1 delta2 = do
+  value <- owenCDF2' nu t1 t2 [delta1] [delta2]
   return $ value V.! 0
 
 owenCDF3' :: CInt -> CDouble -> CDouble -> CDouble -> CDouble -> IO CDouble
@@ -63,26 +63,26 @@ main :: IO ()
 main = defaultMain $
   testGroup "Tests"
   [
-    testGroup "OwenCDF4"
+    testGroup "owenCDF4'"
     [
-      testCase "OwenCDF4 value 1" $ do
-        x <- owenCDF4' 6 2 1 3 2
+      testCase "owenCDF4' value 1" $ do
+        x <- owenCDF4'' 6 2 1 3 2
         (@~?) x 0.01785518085912236 9,
-      testCase "OwenCDF4' value 1" $ do
+      testCase "owenCDF4'' value 1" $ do
         x <- owenCDF4_ 6 2 1 3 2
         (@~?) x 0.01785518085912236 9,
-      testCase "OwenCDF4 value 2" $ do
-        x <- owenCDF4' 5 2 1 3 2
+      testCase "owenCDF4' value 2" $ do
+        x <- owenCDF4'' 5 2 1 3 2
         (@~?) x 0.01868982415809893 8,
-      testCase "OwenCDF4' value 2" $ do
+      testCase "owenCDF4'' value 2" $ do
         x <- owenCDF4_ 5 2 1 3 2
         (@~?) x 0.01868982415809893 8,
-      testCase "OwenCDF4 delta1=Inf - independent of t1" $ do
-        x1 <- owenCDF4' 2 3 1 100 2
-        x2 <- owenCDF4' 2 13 1 (1/0) 2
+      testCase "owenCDF4' delta1=Inf - independent of t1" $ do
+        x1 <- owenCDF4'' 2 3 1 100 2
+        x2 <- owenCDF4'' 2 13 1 (1/0) 2
         (@~?) x1 x2 11,
-      testCase "OwenCDF4 delta1=Inf - equal studentCDF" $ do
-        x1 <- owenCDF4' 2 3 1 (1/0) 2
+      testCase "owenCDF4' delta1=Inf - equal studentCDF" $ do
+        x1 <- owenCDF4'' 2 3 1 (1/0) 2
         x2 <- studentCDF' 1 2 2
         (@~?) x1 x2 11
     ],
@@ -106,13 +106,13 @@ main = defaultMain $
         s <- studentCDF' 2 7 2
         (@~?) (o1+o2) s 14
     ],
-    testGroup "OwenCDF2"
+    testGroup "owenCDF2'"
     [
-      testCase "OwenCDF2 - value 1" $ do
-        x <- owenCDF2' 6 2 1 3 2
+      testCase "owenCDF2' - value 1" $ do
+        x <- owenCDF2'' 6 2 1 3 2
         (@~?) x 0.03257737810540227 9,
-      testCase "OwenCDF2 - value 2" $ do
-        x <- owenCDF2' 5 2 1 3 2
+      testCase "owenCDF2' - value 2" $ do
+        x <- owenCDF2'' 5 2 1 3 2
         (@~?) x 0.0353568969628651 8
     ],
     testGroup "OwenCDF1"
@@ -137,15 +137,15 @@ main = defaultMain $
     [
       testCase "The OwenCDF sum to one - test 1" $ do
         x1 <- owenCDF1' 6 2 1 2 1
-        x2 <- owenCDF2' 6 2 1 2 1
+        x2 <- owenCDF2'' 6 2 1 2 1
         x3 <- owenCDF3' 6 2 1 2 1
-        x4 <- owenCDF4' 6 2 1 2 1
+        x4 <- owenCDF4'' 6 2 1 2 1
         (@~?) (x1+x2+x3+x4) 1 15,
       testCase "The OwenCDF sum to one - test 2" $ do
         x1 <- owenCDF1' 5 2 1 2 1
-        x2 <- owenCDF2' 5 2 1 2 1
+        x2 <- owenCDF2'' 5 2 1 2 1
         x3 <- owenCDF3' 5 2 1 2 1
-        x4 <- owenCDF4' 5 2 1 2 1
+        x4 <- owenCDF4'' 5 2 1 2 1
         (@~?) (x1+x2+x3+x4) 1 15
     ]
   ]

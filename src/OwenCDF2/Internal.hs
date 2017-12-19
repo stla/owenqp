@@ -1,27 +1,26 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module OwenCDF2.Internal
-  (_owenCDF2)
+  (__owenCDF2)
   where
 import           Data.List                    (findIndices)
 import           Data.Vector.Storable         (Storable)
 import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as VM
-import           Foreign.C.Types
 import           Internal.Infinite
 import           OwenCDF2.OwenCDF2CPP
 import           Student
 
-__owenCDF2 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
-              b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
-__owenCDF2 nu t1 t2 delta1 delta2 = do
+___owenCDF2 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+               Int -> b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
+___owenCDF2 algo nu t1 t2 delta1 delta2 = do
   let delta1delta2 = zip delta1 delta2
   let finite = findIndices
         (\(d1,d2) -> isFinite d1 && isFinite d2) delta1delta2
   case length finite == n of
-    True -> owenCDF2cpp nu t1 t2 delta1 delta2
+    True -> owenCDF2cpp algo nu t1 t2 delta1 delta2
     False -> do
-      out0 <- owenCDF2cpp nu t1 t2 [delta1 !! i | i <- finite]
-                                   [delta2 !! i | i <- finite]
+      out0 <- owenCDF2cpp algo nu t1 t2 [delta1 !! i | i <- finite]
+                                        [delta2 !! i | i <- finite]
       out <- VM.replicate n (0 :: a)
       let step i j
            | i == n = do
@@ -35,9 +34,9 @@ __owenCDF2 nu t1 t2 delta1 delta2 = do
       step 0 0
     where n = length delta1
 
-_owenCDF2 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
-             b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
-_owenCDF2 nu t1 t2 delta1 delta2 = do
+__owenCDF2 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
+              Int -> b -> a -> a -> [a] -> [a] -> IO (V.Vector a)
+__owenCDF2 algo nu t1 t2 delta1 delta2 = do
   case delta1 == [] of
     True -> return V.empty
     False -> do
@@ -89,5 +88,5 @@ _owenCDF2 nu t1 t2 delta1 delta2 = do
                                         VM.write out i (out0 V.! j)
                                         step (i+1) (j+1)
                           step 0 0
-                False -> __owenCDF2 nu t1 t2 delta1 delta2
+                False -> ___owenCDF2 algo nu t1 t2 delta1 delta2
       where n = length delta1
