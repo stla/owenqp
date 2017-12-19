@@ -40,7 +40,7 @@ owenQ1export nu t delta r n result = do
   n <- peek n
   delta <- peekArray (fromIntegral n) delta
   r <- peekArray (fromIntegral n) r
-  (>>=) (fmap V.toList $ owenQ1 nu t delta r) (pokeArray result)
+  (>>=) (fmap V.toList $ owenQ1' nu t delta r) (pokeArray result)
 
 foreign export ccall owenCDF4export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble ->
                   Ptr CDouble -> Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
