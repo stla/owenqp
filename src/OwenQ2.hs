@@ -59,10 +59,18 @@ _owenQ2 algo nu t delta r = do
             True  -> return $ V.fromList $ map (pnorm . ((-) t)) delta
             False -> do
               case isPlusInfinite t of
-                True -> return $ V.fromList $ map (gammaQhalf nu) r
+                True -> return $ V.fromList $
+                          map (\(d,r) -> if isPlusInfinite d
+                                            then (0/0 :: a)
+                                            else gammaQhalf nu r)
+                              (zip delta r)
                 False -> do
                   case isMinusInfinite t of
-                    True -> return $ V.replicate (length delta) 0
+                    True -> return $ V.fromList $
+                              map (\d -> if isMinusInfinite d
+                                            then (0/0 :: a)
+                                            else (0 :: a))
+                                  delta
                     False -> __owenQ2 algo nu t delta r
 
 owenQ2 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>

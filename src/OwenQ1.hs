@@ -54,12 +54,23 @@ _owenQ1 algo nu t delta r = do
       case nu < 1 of
         True -> return $ V.replicate (length delta) (0/0)
         False -> do
-          case nu == (maxBound :: b) || isMinusInfinite t of
+          case nu == (maxBound :: b) of
             True  -> return $ V.replicate (length delta) 0
             False -> do
               case isPlusInfinite t of
-                True -> return $ V.fromList $ map (gammaPhalf nu) r
-                False -> __owenQ1 algo nu t delta r
+                True -> return $ V.fromList $
+                          map (\(d,r) -> if isPlusInfinite d
+                                            then (0/0 :: a)
+                                            else gammaPhalf nu r)
+                              (zip delta r)
+                False -> do
+                  case isMinusInfinite t of
+                    True -> return $ V.fromList $
+                              map (\d -> if isMinusInfinite d
+                                            then (0/0 :: a)
+                                            else (0 :: a))
+                                  delta
+                    False -> __owenQ1 algo nu t delta r
 
 owenQ1 :: forall a b. (RealFloat a, Storable a, Integral b, Bounded b) =>
           b -> a -> [a] -> [a] -> IO (V.Vector a)
