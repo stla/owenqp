@@ -9,6 +9,7 @@ import           OwenCDF2
 import           OwenCDF3
 import           OwenCDF4
 import           OwenQ1
+import           OwenQ2
 import           OwenT
 import           Student
 
@@ -44,6 +45,18 @@ owenQ1export nu t delta r n result = do
   delta <- peekArray (fromIntegral n) delta
   r <- peekArray (fromIntegral n) r
   (>>=) (fmap V.toList $ owenQ1' nu t delta r) (pokeArray result)
+
+foreign export ccall owenQ2export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble ->
+                                 Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()
+owenQ2export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
+                                                Ptr CInt -> Ptr CDouble -> IO ()
+owenQ2export nu t delta r n result = do
+  nu <- peek nu
+  t <- peek t
+  n <- peek n
+  delta <- peekArray (fromIntegral n) delta
+  r <- peekArray (fromIntegral n) r
+  (>>=) (fmap V.toList $ owenQ2' nu t delta r) (pokeArray result)
 
 foreign export ccall owenCDF4export :: Ptr CInt -> Ptr CDouble -> Ptr CDouble ->
                   Ptr CDouble -> Ptr CDouble -> Ptr CInt -> Ptr CDouble -> IO ()

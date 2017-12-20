@@ -3,5 +3,9 @@ EXPORTS
  studentCDFexport
  owenTexport
  owenQ1export
+ owenQ2export
+ owenCDF1export
+ owenCDF2export
+ owenCDF3export
  owenCDF4export
  lockFile
