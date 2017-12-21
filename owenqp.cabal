@@ -58,7 +58,7 @@ library
   extra-libraries:     stdc++
                      , quadmath
   include-dirs:        cppfiles
-  C-sources:           cppfiles/owen.cpp
+  C-sources:           cppfiles/owenlong.cpp
 
 executable testowen128
   if flag(exe)

@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-
 module OwenQ2.OwenQ2CPP
+  (owenQ2cpp)
   where
 import qualified Data.Vector.Storable         as V
 import           Foreign
@@ -21,7 +21,7 @@ owenQ2cpp algo nu t delta r = do
       V.unsafeWith deltavec $
         \v1 -> V.unsafeWith rvec $
           \v2 -> withForeignPtr fptr $
-            c_OwenQ2 (fromIntegral algo) (fromIntegral nu) (realToFrac t) v1 v2 
+            c_OwenQ2 (fromIntegral algo) (fromIntegral nu) (realToFrac t) v1 v2
                      (fromIntegral n)
       return $ V.map realToFrac (V.unsafeFromForeignPtr0 fptr n)
   where n = length delta

@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-
 module OwenCDF3.OwenCDF3CPP
+  (owenCDF3cpp)
   where
 import qualified Data.Vector.Storable         as V
 import           Foreign

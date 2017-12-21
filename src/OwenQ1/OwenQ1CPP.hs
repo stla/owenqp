@@ -1,5 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module OwenQ1.OwenQ1CPP
+  (owenQ1cpp)
   where
 import qualified Data.Vector.Storable         as V
 import           Foreign

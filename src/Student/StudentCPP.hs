@@ -1,6 +1,6 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
-
 module Student.StudentCPP
+  (studentCDFcpp)
   where
 import qualified Data.Vector.Storable         as V
 import           Foreign
@@ -19,6 +19,6 @@ studentCDFcpp q nu delta = do
         fptr <- mallocForeignPtrArray n
         V.unsafeWith deltavec $
           \v  -> withForeignPtr fptr $
-                c_studentCDF (realToFrac q) (fromIntegral nu) v (fromIntegral n)
+            c_studentCDF (realToFrac q) (fromIntegral nu) v (fromIntegral n)
         return $ V.map realToFrac (V.unsafeFromForeignPtr0 fptr n)
   where n = length delta
