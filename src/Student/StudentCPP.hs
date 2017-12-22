@@ -17,7 +17,7 @@ studentCDFcpp q nu delta = do
       False -> do
         let deltavec = V.fromList (map realToFrac delta :: [CDouble])
         fptr <- mallocForeignPtrArray n
-        V.unsafeWith deltavec $
+        _ <- V.unsafeWith deltavec $
           \v  -> withForeignPtr fptr $
             c_studentCDF (realToFrac q) (fromIntegral nu) v (fromIntegral n)
         return $ V.map realToFrac (V.unsafeFromForeignPtr0 fptr n)

@@ -22,7 +22,7 @@ __owenQ1 algo nu t delta r = do
       False -> do
         case finiteIndices == [] of
           True -> return $ V.fromList
-            (map (\(delta, r) -> if delta>0 then 0 else gammaPhalf nu r)
+            (map (\(x, y) -> if x>0 then 0 else gammaPhalf nu y)
                  (zip delta r))
           False -> do
             owen <- owenQ1cpp algo nu t [delta !! i | i <- finiteIndices]
@@ -59,9 +59,9 @@ _owenQ1 algo nu t delta r = do
             False -> do
               case isPlusInfinite t of
                 True -> return $ V.fromList $
-                          map (\(d,r) -> if isPlusInfinite d
+                          map (\(x,y) -> if isPlusInfinite x
                                             then (0/0 :: a)
-                                            else gammaPhalf nu r)
+                                            else gammaPhalf nu y)
                               (zip delta r)
                 False -> do
                   case isMinusInfinite t of

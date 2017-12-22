@@ -18,7 +18,7 @@ owenQ1cpp algo nu t delta r = do
       let deltavec = V.fromList (map realToFrac delta :: [CDouble])
       let rvec = V.fromList (map realToFrac r :: [CDouble])
       fptr <- mallocForeignPtrArray n
-      V.unsafeWith deltavec $
+      _ <- V.unsafeWith deltavec $
         \v1 -> V.unsafeWith rvec $
           \v2 -> withForeignPtr fptr $
             c_OwenQ1 (fromIntegral algo) (fromIntegral nu) (realToFrac t) v1 v2
