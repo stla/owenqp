@@ -11,3 +11,5 @@ extra-deps:
 extra-include-dirs:
 - U:\Data\C\boost_1_65_1\boost_1_65_1
 - .\cppfiles
+
+dump-logs: all
