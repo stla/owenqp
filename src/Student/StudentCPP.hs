@@ -11,7 +11,7 @@ foreign import ccall unsafe "studentCDF" c_studentCDF :: CDouble -> CSize ->
 
 studentCDFcpp :: (RealFloat a, Storable a, Integral b) =>
                  a -> b -> [a] -> IO (V.Vector a)
-studentCDFcpp q nu delta = do
+studentCDFcpp q nu delta = 
     case delta == [] of
       True -> return V.empty
       False -> do

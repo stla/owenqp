@@ -54,7 +54,7 @@ library
                      , vector
                      , gamma
                      , erf
-  default-extensions:  ScopedTypeVariables
+  other-extensions:    ScopedTypeVariables
                      , ForeignFunctionInterface
   default-language:    Haskell2010
   extra-libraries:     stdc++
